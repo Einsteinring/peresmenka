@@ -3,10 +3,25 @@
   "trailingSlash": true,
   "buildCommand": "npm run build",
   "outputDirectory": ".",
+  "functions": {
+    "api/**/*.mjs": {
+      "includeFiles": "{data,js}/**"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/match",
+      "schedule": "0 6 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/data/(.*)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
+    },
+    {
+      "source": "/lk/(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
     }
   ]
 }

@@ -6,8 +6,10 @@
   "scripts": {
     "data": "node tools/gen-data.mjs",
     "pages": "node tools/build-seo.mjs",
-    "build": "node tools/gen-data.mjs && node tools/build-seo.mjs",
+    "build": "node tools/gen-data.mjs && node tools/gen-demo-account.mjs && node tools/build-seo.mjs",
     "serve": "node tools/serve.mjs",
-    "test": "node --test \"test/*.test.mjs\""
+    "test": "node --test \"test/*.test.mjs\"",
+    "demo": "node tools/gen-demo-account.mjs",
+    "check:redis": "node --env-file=.env tools/check-upstash.mjs"
   }
 }

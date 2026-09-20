@@ -28,19 +28,31 @@ test('на странице-списке не меньше трёх групп',
   for (const u of urls()) {
     if (u === '/' || u.startsWith('/g/')) continue;
     const html = readPage(u);
-    const rows = (html.match(/<li class="row">/g) || []).length;
+    const rows = (html.match(/<li class="row"[ >]/g) || []).length;
     assert.ok(rows >= 3, `${u}: групп ${rows}`);
   }
 });
 
 test('список групп лежит в HTML, а не собирается скриптом', { skip }, () => {
-  const u = urls().find((x) => x !== '/' && !x.startsWith('/g/'));
-  const html = readPage(u);
-  assert.ok(html.includes('<li class="row">'));
-  // на странице-списке скриптов нет вообще, только JSON-LD
-  const scripts = [...html.matchAll(/<script([^>]*)>/g)].map((m) => m[1]);
-  for (const attrs of scripts) {
-    assert.match(attrs, /application\/ld\+json/, `на ${u} есть исполняемый скрипт`);
+  // Проверяем каждую страницу-список, а не первую попавшуюся: с появлением
+  // кабинета соблазн уронить туда скрипт стал реальным.
+  for (const u of urls()) {
+    if (u === '/' || u.startsWith('/g/')) continue;
+    const html = readPage(u);
+    assert.match(html, /<li class="row"[ >]/, `${u}: список не в HTML`);
+    const scripts = [...html.matchAll(/<script([^>]*)>/g)].map((m) => m[1]);
+    for (const attrs of scripts) {
+      assert.match(attrs, /application\/ld\+json/, `на ${u} есть исполняемый скрипт`);
+    }
+  }
+});
+
+test('на страницы-списки не попал ни один обработчик и ни один onclick', { skip }, () => {
+  for (const u of urls()) {
+    if (u === '/' || u.startsWith('/g/')) continue;
+    const html = readPage(u);
+    assert.doesNotMatch(html, /\son[a-z]+=/i, `${u}: инлайновый обработчик`);
+    assert.doesNotMatch(html, /<script[^>]+src=/i, `${u}: внешний скрипт`);
   }
 });
 
@@ -79,6 +91,8 @@ test('разметка JSON-LD разбирается и содержит кро
 test('внутренние ссылки ведут на существующие страницы', { skip }, () => {
   const known = new Set(urls());
   known.add('/');
+  // Кабинет в sitemap не попадает намеренно: страница личная и под noindex.
+  known.add('/lk/');
   for (const u of urls().slice(0, 120)) {
     const html = readPage(u);
     for (const m of html.matchAll(/href="(\/[^"#?]*)"/g)) {

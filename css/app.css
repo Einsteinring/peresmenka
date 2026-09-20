@@ -1,20 +1,27 @@
 /* Пересменка
-   Холодная петербургская бумага, чернила вместо цвета, одна заливка на весь
-   интерфейс — окно, которое родитель закрашивает сам. Смелость потрачена
-   в одном месте: интервальная полоса. Она же в недельной сетке наверху,
-   она же в каждой строке занятия в карточке. Всё остальное молчит. */
+   Тёплая бумага, чернила вместо цвета — и цвет, который принадлежит
+   содержанию, а не интерфейсу: девять направлений это девять материалов.
+   Интерфейс остаётся бесцветным, кроме двух служебных акцентов, и оба
+   про время: синий — окно, которое задал родитель, янтарный — то, что
+   поджимает. Больше янтарный не значит ничего.
+
+   Где цвет направления работает: плитка, обложка карточки, точка в
+   крошках, заголовок посадочной страницы. Где его нет никогда: кнопки,
+   ссылки, текст, панель результатов, гео-списки, сетка недели. */
 
 :root {
-  --paper: #e9edf0;
-  --surface: #ffffff;
-  --ink: #13202a;
-  --ink-soft: #52626e;
-  --edge: #c6d0d7;
-  --edge-soft: #dde3e8;
+  --paper: #ece9e3;
+  --surface: #fcfbf8;
+  --ink: #26211c;
+  --ink-soft: #6b6157;
+  --edge: #d6d0c6;
+  --edge-soft: #e4dfd7;
   --window: #9fc6e8;
-  --window-soft: #cfe1f1;
-  --amber: #8a5100;
-  --amber-soft: #f2e3cf;
+  --window-soft: #d3e4f2;
+  --window-line: #6fa8d4;
+  --amber: #8f5214;
+  --amber-bright: #c97e28;
+  --amber-soft: #f0e0cb;
 
   --sans: 'Onest', system-ui, sans-serif;
   --disp: 'Geologica', 'Onest', system-ui, sans-serif;
@@ -162,11 +169,12 @@ a:hover { text-decoration-color: currentColor; }
 .kid__drop:hover { color: var(--ink); }
 
 .btn {
+  text-decoration: none;
   border: 1px solid var(--ink); border-radius: 3px;
   background: var(--ink); color: var(--paper);
   padding: .4rem .7rem; font: inherit; font-size: var(--t-small); cursor: pointer;
 }
-.btn:hover { background: #0a1620; }
+.btn:hover { background: #161210; }
 .btn--quiet { background: var(--surface); color: var(--ink); border-color: var(--edge); }
 .btn--quiet:hover { background: var(--paper); border-color: var(--ink-soft); }
 .btn--add { margin-top: .5rem; }
@@ -272,7 +280,7 @@ a:hover { text-decoration-color: currentColor; }
   padding: .35rem .5rem; font: inherit;
 }
 .field--radius input { width: 100%; }
-.geo__msg { margin: .25rem 0 0; font-size: var(--t-small); color: var(--amber); }
+.geo__msg { margin: .25rem 0 0; font-size: var(--t-small); color: var(--ink-soft); }
 
 /* ── панель результата ───────────────────────────────────────────────────── */
 
@@ -309,9 +317,18 @@ a:hover { text-decoration-color: currentColor; }
   background: var(--surface);
   border: 1px solid var(--edge);
   border-radius: 6px;
-  padding: .875rem 1rem;
   margin-bottom: .625rem;
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  overflow: hidden;
 }
+.card__cover { grid-row: 1 / -1; position: relative; background: var(--d-wash); }
+.card__cover .cover__svg { display: block; width: 100%; height: 100%; }
+.card__cover .ic {
+  position: absolute; top: .625rem; left: .625rem;
+  color: var(--d-ink);
+}
+.card__body { padding: .875rem 1rem; min-width: 0; }
 
 .card__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .75rem; }
 .card__title { margin: 0; font-size: 1.0625rem; font-weight: 500; letter-spacing: -0.01em; }
@@ -334,7 +351,7 @@ a:hover { text-decoration-color: currentColor; }
 .age--plain { margin: 0 0 .625rem; font-size: var(--t-small); color: var(--ink-soft); }
 .age__row { display: flex; flex-wrap: wrap; gap: .2rem .6rem; font-size: var(--t-small); }
 .age__who { font-weight: 500; min-width: 5rem; }
-.age__row--near .age__who, .age__row--near .age__note { color: var(--amber); }
+.age__row--near .age__who, .age__row--near .age__note { color: var(--ink-soft); }
 
 /* занятия — главная графика проекта */
 
@@ -375,7 +392,7 @@ a:hover { text-decoration-color: currentColor; }
 .card__facts dt { font-size: var(--t-micro); color: var(--ink-soft); }
 .card__facts dd { margin: 0; font-size: var(--t-small); }
 .card__facts dd.num { font-family: var(--disp); font-size: .9375rem; }
-.card__facts dd.soon { color: var(--amber); }
+.card__facts dd.urgent { color: var(--amber); }
 
 .card__tail {
   margin: 0; display: flex; flex-wrap: wrap; gap: .1rem 1.25rem;
@@ -545,6 +562,260 @@ a:hover { text-decoration-color: currentColor; }
 .almost > summary h2::before { content: '▸ '; color: var(--ink-soft); }
 .almost[open] > summary h2::before { content: '▾ '; }
 .almost__body { padding-top: .75rem; }
-.almost .card { border-left: 3px solid var(--amber-soft); }
+.almost .card { border-left: 3px dashed var(--edge); }
 
 .muted { color: var(--ink-soft); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Цвет направлений
+
+   Единственное место, где живёт палитра девяти. Разметка её не знает:
+   SVG внутри берёт var(--d-ink) и var(--d-wash), а пиктограммы — currentColor.
+   Цвет выведен из материала занятия, а не назначен по кругу.
+   Все девять проверены: чернила дают ≥4,5:1 на бумаге, на листе и на
+   собственной заливке.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+[data-dir]                        { --d-ink: var(--ink); --d-wash: var(--edge-soft); }
+[data-dir='robototehnika']        { --d-ink: #2c6146; --d-wash: #c9dcd0; } /* текстолит платы */
+[data-dir='plavanie']             { --d-ink: #155a67; --d-wash: #c2dce1; } /* вода и кафель   */
+[data-dir='muzyka']               { --d-ink: #6e4b0f; --d-wash: #e3d3b0; } /* латунь духовых  */
+[data-dir='yazyki']               { --d-ink: #2f4a96; --d-wash: #c7d2ec; } /* чернила         */
+[data-dir='shahmaty']             { --d-ink: #4d4740; --d-wash: #cfc9bf; } /* графит и камень */
+[data-dir='risovanie']            { --d-ink: #8a4029; --d-wash: #e9cdc0; } /* сангина         */
+[data-dir='edinoborstva']         { --d-ink: #4f5824; --d-wash: #d5dab8; } /* солома татами   */
+[data-dir='tancy']                { --d-ink: #8a3352; --d-wash: #e9c9d3; } /* бордо кулис     */
+[data-dir='teatr']                { --d-ink: #5e3a75; --d-wash: #d8cbe6; } /* сливовый бархат */
+
+.ic { display: block; flex: none; }
+.dot {
+  width: .5rem; height: .5rem; border-radius: 50%;
+  background: var(--d-ink); flex: none;
+}
+
+/* ── витрина направлений ─────────────────────────────────────────────────── */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: .5rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  border: 0;
+  /* Без этого fieldset держит min-width: min-content и не даёт себя сжать:
+     лента перестаёт прокручиваться и утаскивает всю страницу вправо. */
+  min-inline-size: 0;
+}
+.dirs { min-inline-size: 0; }
+.tiles legend { padding: 0; margin-bottom: .5rem; font-size: var(--t-small); color: var(--ink-soft); }
+.tiles__grid { display: contents; }
+
+.tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: .375rem;
+  min-height: 6rem;
+  padding: .75rem .75rem .625rem;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: var(--d-wash);
+  color: var(--d-ink);
+  font: inherit; text-align: left; cursor: pointer;
+}
+.tile:hover { border-color: var(--d-ink); }
+.tile__name {
+  font-family: var(--disp); font-size: .8125rem; font-weight: 500;
+  line-height: 1.15; color: var(--ink);
+}
+.tile__n {
+  margin-top: auto;
+  font-family: var(--disp); font-variant-numeric: tabular-nums;
+  font-size: 1.125rem; font-weight: 500; line-height: 1; color: var(--d-ink);
+}
+.tile[aria-pressed='true'] { background: var(--d-ink); border-color: var(--d-ink); }
+.tile[aria-pressed='true'] .ic,
+.tile[aria-pressed='true'] .tile__name,
+.tile[aria-pressed='true'] .tile__n { color: var(--surface); }
+/* Нулевая плитка гаснет, но не выбеливается: лента направлений должна
+   остаться цельной полосой, а не распасться на пятна и дырки. */
+.tile[data-zero='1'] { background: var(--surface); }
+@supports (background: color-mix(in srgb, red 50%, blue)) {
+  .tile[data-zero='1'] { background: color-mix(in srgb, var(--d-wash) 40%, var(--paper)); }
+}
+.tile[data-zero='1'] .ic { opacity: .5; }
+.tile[data-zero='1'] .tile__name { color: var(--ink-soft); }
+.tile[data-zero='1'] .tile__n { color: var(--ink-soft); }
+
+/* ── рисунки пустых состояний ────────────────────────────────────────────── */
+
+.art { width: 7.5rem; height: auto; color: var(--ink-soft); margin-bottom: .75rem; }
+.nothing-here { display: flex; flex-direction: column; align-items: flex-start; }
+.nothing-here p { margin: 0 0 .75rem; color: var(--ink-soft); max-width: 46ch; font-size: var(--t-small); }
+.nothing-here .art { color: var(--ink-soft); opacity: .7; }
+
+/* ── маркер ребёнка: форма вместо цвета ──────────────────────────────────── */
+
+/* Перелёт по времени — жёсткий факт, он горит янтарным. Возраст ±1 —
+   мягкая граница, где решает звонок в центр, поэтому у неё полый маркер
+   и пунктир, а не другой оттенок. */
+.age__who::before {
+  content: ''; display: inline-block; vertical-align: baseline;
+  width: .5rem; height: .5rem; margin-right: .4rem;
+  background: var(--ink);
+}
+.age__row--near .age__who::before { background: none; box-shadow: inset 0 0 0 1.5px var(--ink-soft); }
+
+/* ── обложка на странице группы ──────────────────────────────────────────── */
+
+.hero-cover {
+  height: 7.5rem; margin: 0 0 1.25rem;
+  border: 1px solid var(--edge); border-radius: 6px; overflow: hidden;
+  position: relative; background: var(--d-wash);
+}
+.hero-cover .cover__svg { display: block; width: 100%; height: 100%; }
+.hero-cover .ic { position: absolute; top: .875rem; left: 1rem; color: var(--d-ink); }
+
+/* ── направление в заголовках и крошках ──────────────────────────────────── */
+
+.page-dir { display: flex; align-items: center; gap: .5rem; margin: 1.25rem 0 .25rem; color: var(--d-ink); }
+.page-dir span { font-family: var(--disp); font-size: var(--t-small); font-weight: 500; }
+.page-rule { height: 3px; width: 3.5rem; background: var(--d-ink); margin: 0 0 1rem; border-radius: 2px; }
+.crumbs .dot { display: inline-block; margin-right: .35rem; vertical-align: middle; }
+
+/* ── мобильное ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 37.49rem) {
+  /* Три в ряд × три ряда уводят конструктор за сгиб, поэтому лента
+     с прилипанием: видно, что список продолжается, и первый экран цел. */
+  .tiles {
+    display: flex; gap: .5rem;
+    margin-inline: calc(var(--gut) * -1);
+    padding-inline: var(--gut);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: var(--gut);
+    scrollbar-width: none;
+  }
+  .tiles::-webkit-scrollbar { display: none; }
+  .tiles legend { float: left; width: 100%; padding-inline: var(--gut); }
+  .tile { flex: 0 0 6.75rem; min-height: 5.5rem; scroll-snap-align: start; }
+
+  /* Полоса-обложка на каждой из полусотни карточек — это километр
+     прокрутки ради украшения. На узком экране от направления остаётся
+     пиктограмма с точкой, а обложка живёт на странице группы. */
+  .card { grid-template-columns: minmax(0, 1fr); }
+  .card__cover { display: none; }
+  .hero-cover { height: 5rem; }
+}
+
+/* ── направление внутри строк и карточек ─────────────────────────────────── */
+
+/* Пиктограмма в заголовке карточки нужна только там, где нет полосы-обложки. */
+.card__mark { display: none; color: var(--d-ink); }
+@media (max-width: 37.49rem) {
+  .card__mark { display: block; }
+  .card__head { align-items: center; }
+}
+
+.row__title .dot { display: inline-block; margin-right: .45rem; vertical-align: middle; }
+.tog__list .dot { display: inline-block; vertical-align: middle; }
+
+/* Витрина и чипы — один фильтр в двух видах; вместе они не показываются
+   никогда, иначе один и тот же список из девяти имён стоит на экране дважды. */
+@media (min-width: 64rem) { .dirs { display: none; } }
+@media (max-width: 63.99rem) { .tiles legend { display: none; } }
+
+.chip .dot { margin-right: .1rem; align-self: center; }
+.chip[aria-pressed='true'] .dot { box-shadow: 0 0 0 1px var(--paper); }
+.empty .art { color: var(--ink-soft); opacity: .8; margin-bottom: 1rem; width: 9rem; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Профиль, колокольчик и вход
+
+   Ничего не загораживает: панель входа раскрывается в потоке, поиск под ней
+   продолжает работать. Модалок «войдите, чтобы продолжить» в проекте нет.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.top__in { position: relative; }
+.top__me { margin-left: auto; display: flex; align-items: center; gap: .75rem; }
+.top__link {
+  font-size: var(--t-small); color: var(--ink-soft);
+  background: none; border: 0; padding: .25rem; font-family: inherit; cursor: pointer;
+  text-decoration: none; white-space: nowrap;
+}
+.top__link:hover { color: var(--ink); }
+.top__link--go { color: var(--ink); text-decoration: underline; text-decoration-color: var(--edge); }
+
+.bell { position: relative; }
+.bell__btn {
+  display: flex; align-items: center; gap: .25rem;
+  border: 0; background: none; color: var(--ink-soft); cursor: pointer; padding: .25rem;
+}
+.bell__btn:hover { color: var(--ink); }
+.bell__n {
+  min-width: 1.1rem; font-size: var(--t-micro); line-height: 1.1rem;
+  color: var(--surface); background: var(--amber); border-radius: 999px;
+  text-align: center; padding: 0 .2rem;
+}
+.bell__n:empty { display: none; }
+
+.bell__drop {
+  position: absolute; right: 0; top: calc(100% + .5rem); z-index: 40;
+  width: min(24rem, calc(100vw - 2rem));
+  background: var(--surface); border: 1px solid var(--edge); border-radius: 8px;
+  max-height: 70vh; overflow-y: auto;
+}
+.bell__head {
+  display: flex; align-items: baseline; gap: 1rem; margin: 0;
+  padding: .625rem .875rem; border-bottom: 1px solid var(--edge-soft);
+  font-size: var(--t-small); color: var(--ink-soft);
+}
+.bell__all { margin-left: auto; border: 0; background: none; font: inherit; font-size: var(--t-small); color: var(--ink); text-decoration: underline; cursor: pointer; }
+.bell__list { list-style: none; margin: 0; padding: 0; }
+.bell__item { border-bottom: 1px solid var(--edge-soft); }
+.bell__item:last-child { border-bottom: 0; }
+.bell__item a { display: grid; gap: .15rem; padding: .625rem .875rem .625rem 1.5rem; text-decoration: none; position: relative; }
+.bell__item a:hover { background: var(--paper); }
+.bell__item--new a::before {
+  content: ''; position: absolute; left: .75rem; top: .95rem;
+  width: .4rem; height: .4rem; border-radius: 50%; background: var(--d-ink, var(--ink));
+}
+.bell__title { font-size: var(--t-small); font-weight: 500; }
+.bell__item:not(.bell__item--new) .bell__title { font-weight: 400; color: var(--ink-soft); }
+.bell__body { font-size: var(--t-small); color: var(--ink-soft); }
+.bell__when { font-size: var(--t-micro); color: var(--ink-soft); }
+.bell__empty { padding: 1rem; }
+.bell__empty .art { width: 6rem; }
+
+.login {
+  background: var(--surface); border: 1px solid var(--edge); border-radius: 8px;
+  padding: 1rem 1.125rem; margin: 1rem 0; max-width: 34rem;
+}
+.login--drop { position: absolute; right: var(--gut); top: 100%; z-index: 40; margin: .5rem 0 0; }
+.login__why { margin: 0 0 .5rem; font-weight: 500; }
+.login__list { margin: 0 0 .875rem; padding-left: 1.1rem; font-size: var(--t-small); color: var(--ink-soft); }
+.login__list li { margin-bottom: .2rem; }
+.login__widget { min-height: 2.5rem; }
+.login__note { margin: .75rem 0 0; font-size: var(--t-small); color: var(--ink-soft); }
+.login__demo { margin: .75rem 0 0; }
+.login__off { margin: .5rem 0 0; font-size: var(--t-small); color: var(--amber); }
+
+.savebar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-left: auto; }
+.savebar__msg { font-size: var(--t-small); color: var(--ink-soft); }
+
+.follow {
+  display: inline-flex; align-items: center; gap: .35rem;
+  border: 1px solid var(--edge); border-radius: 3px; background: var(--surface);
+  color: var(--ink); padding: .4rem .7rem; font: inherit; font-size: var(--t-small); cursor: pointer;
+}
+.follow:hover { border-color: var(--ink-soft); }
+.follow[aria-pressed='true'] { background: var(--d-wash, var(--paper)); border-color: var(--d-ink, var(--ink)); color: var(--d-ink, var(--ink)); }
+
+.demobar {
+  background: var(--amber-soft); border-bottom: 1px solid var(--edge);
+  padding: .5rem var(--gut); font-size: var(--t-small); text-align: center; color: var(--ink);
+}
+.demobar a { margin-left: .5rem; }
+
+@media (max-width: 37.49rem) {
+  .top__demo { order: 3; flex-basis: 100%; }
+  .login--drop { left: var(--gut); right: var(--gut); }
+}

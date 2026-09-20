@@ -15,6 +15,7 @@ import { readFileSync } from 'node:fs';
 import { buildIndex, haversine, priceStats } from '../js/model.js';
 import { queryToSearch } from '../js/state.js';
 import { groupRow, esc, groupUrl } from '../js/render.js';
+import { coverSvg, dirIcon } from '../js/visual.js';
 import {
   DAY_SHORT, ageRange, dateShort, distance, groupsWord, intake, plural, price, span, time
 } from '../js/format.js';
@@ -51,13 +52,14 @@ function write(urlPath, html) {
 
 /* ── общая обёртка ───────────────────────────────────────────────────────── */
 
-function layout({ title, description, canonical, crumbs, body, jsonld }) {
+function layout({ title, description, canonical, crumbs, body, jsonld, dir }) {
   const crumbHtml = crumbs
-    .map((c, i) =>
-      i === crumbs.length - 1
-        ? `<li aria-current="page">${esc(c.name)}</li>`
-        : `<li><a href="${c.url}">${esc(c.name)}</a></li>`
-    )
+    .map((c, i) => {
+      const dot = c.dot ? '<span class="dot"></span>' : '';
+      return i === crumbs.length - 1
+        ? `<li aria-current="page">${dot}${esc(c.name)}</li>`
+        : `<li><a href="${c.url}">${dot}${esc(c.name)}</a></li>`;
+    })
     .join('');
 
   const crumbLd = {
@@ -88,13 +90,14 @@ function layout({ title, description, canonical, crumbs, body, jsonld }) {
 <script type="application/ld+json">${JSON.stringify(crumbLd)}</script>
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ''}
 </head>
-<body>
+<body${dir ? ` data-dir="${esc(dir)}"` : ''}>
 <a class="skip" href="#main">К содержанию</a>
 
 <header class="top">
   <div class="top__in">
     <a class="mark" href="/">Пересменка</a>
     <p class="top__demo">Демонстрационный каталог. Организации, педагоги, адреса занятий и расписание вымышлены; районы и станции метро настоящие.</p>
+    <div class="top__me"><a class="top__link" href="/lk/">Кабинет</a></div>
   </div>
 </header>
 
@@ -295,7 +298,7 @@ function pageTitleAndScope(p) {
 }
 
 function crumbsFor(url, p) {
-  const out = [{ name: 'Все кружки', url: '/' }, { name: p.dir.short, url: `/${p.dir.slug}/` }];
+  const out = [{ name: 'Все кружки', url: '/' }, { name: p.dir.short, url: `/${p.dir.slug}/`, dot: true }];
   if (p.age && pages.has(`/${p.dir.slug}/${p.age}-let/`) && url !== `/${p.dir.slug}/${p.age}-let/`) {
     out.push({ name: `${p.age} лет`, url: `/${p.dir.slug}/${p.age}-let/` });
   }
@@ -392,7 +395,9 @@ function renderListPage(url, p) {
     .map((d) => ({ name: `${d.short} по всему городу`, url: `/${d.slug}/`, n: pages.get(`/${d.slug}/`).groups.length }));
 
   const body = `
+<p class="page-dir">${dirIcon(p.dir.id, 20)}<span>${esc(p.dir.name)}</span></p>
 <h1>${esc(h1)}</h1>
+<div class="page-rule"></div>
 <p class="intro">${esc(introText(s, scope))}</p>
 ${p.station ? `<p class="intro intro--note">В список попадают занятия не дальше 1,5 км от вестибюля по прямой. У каждой группы указано её настоящее расстояние.</p>` : ''}
 
@@ -415,6 +420,7 @@ ${p.station ? `<p class="intro intro--note">В список попадают з�
     canonical: url,
     crumbs: crumbsFor(url, p),
     body,
+    dir: p.dir.id,
     jsonld: itemListLd(sorted, h1)
   });
 }
@@ -447,7 +453,7 @@ function renderGroupPage(g) {
     .filter((x) => x.g.direction === g.direction && x.g.id !== g.id && x.g.branchId !== g.branchId)
     .slice(0, 6);
 
-  const crumbs = [{ name: 'Все кружки', url: '/' }, { name: g.dir.short, url: `/${g.dir.slug}/` }];
+  const crumbs = [{ name: 'Все кружки', url: '/' }, { name: g.dir.short, url: `/${g.dir.slug}/`, dot: true }];
   const stationPage = `/${g.dir.slug}/${index.stationById.get(g.branch.stationId).slug}/`;
   if (pages.has(stationPage)) {
     crumbs.push({ name: `${g.dir.short} у метро ${g.branch.stationName}`, url: stationPage });
@@ -455,6 +461,7 @@ function renderGroupPage(g) {
   crumbs.push({ name: `${g.dir.short}: ${g.title}`, url });
 
   const body = `
+<div class="hero-cover">${coverSvg(g, 960, 120)}${dirIcon(g.direction, 22)}</div>
 <h1>${esc(g.dir.short)}: ${esc(g.title)}</h1>
 <p class="intro">${esc(g.org.name)} — ${esc(g.branch.address)}. Группа ${ageRange(g.ageFrom, g.ageTo)}, ${g.level === 'start' ? 'занимаются с нуля' : 'для продолжающих'}, до ${g.groupSize} ${plural(g.groupSize, 'человека', 'человек', 'человек')}.</p>
 
@@ -505,6 +512,7 @@ function renderGroupPage(g) {
   </div>
 
   <aside class="cols__side">
+    <p class="facts__follow"><button type="button" class="follow" data-follow="${g.id}" aria-pressed="false">Отслеживать</button></p>
     <dl class="facts">
       <div><dt>В месяц</dt><dd class="num">${price(g.priceMonth)}</dd></div>
       <div><dt>Разовое</dt><dd class="num">${price(g.priceSingle)}</dd></div>
@@ -519,7 +527,7 @@ function renderGroupPage(g) {
 
 ${sameBranch.length ? `<section class="block">
   <h2>Ещё в этом филиале</h2>
-  <ol class="rows">${sameBranch.map((x) => groupRow(x)).join('')}</ol>
+  <ol class="rows">${sameBranch.map((x) => groupRow(x, { dot: true })).join('')}</ol>
 </section>` : ''}
 
 ${sameDirNear.length ? `<section class="block">
@@ -536,6 +544,7 @@ ${sameDirNear.length ? `<section class="block">
     canonical: url,
     crumbs,
     body,
+    dir: g.direction,
     jsonld: { '@context': 'https://schema.org', ...courseLd(g) }
   });
 }

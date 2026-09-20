@@ -8,7 +8,10 @@ import {
 import { parseQuery, queryToSearch } from './state.js';
 import { createGrid, createList, describeWindows } from './grid.js';
 import { groupCard, suggestionList, togetherCard, esc, groupUrl } from './render.js';
+import { dirIcon, emptyArt } from './visual.js';
 import { distance, groupsWord, plural, price, span, DAY_SHORT, time } from './format.js';
+import { favIds, saveCurrentSearch, toggleFav } from './account.js';
+import { loginPanel, mountTopbar } from './topbar.js';
 
 const $ = (id) => document.getElementById(id);
 const PAGE = 30;
@@ -50,6 +53,62 @@ async function boot() {
 
   syncControls();
   renderAll();
+
+  // Кабинет подключается после того, как поиск уже работает: он ничего
+  // не загораживает и ничего не ждёт.
+  mountTopbar($('topme'), {
+    onState(state) {
+      followed = state.user ? new Set((state.favs || []).map((f) => f.id)) : null;
+      paintFollowed();
+    }
+  });
+  mountSaveBar();
+}
+
+/* ── сохранить поиск и отслеживать группу ────────────────────────────────── */
+
+// Гостю ничего не запрещается: панель с объяснением раскрывается под панелью
+// результатов, поиск продолжает работать.
+let followed = null;
+
+// Панель всегда одна: вторая причина заменяет первую, а не закрывает её.
+function offerLogin(reason) {
+  const slot = $('saveslot');
+  slot.textContent = '';
+  slot.append(loginPanel(reason));
+  slot.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+}
+
+function mountSaveBar() {
+  const bar = $('savebar');
+  bar.innerHTML = '<button type="button" class="btn btn--quiet" id="save-search">Сохранить поиск</button><span class="savebar__msg" id="save-msg"></span>';
+  $('save-search').addEventListener('click', async () => {
+    const search = queryToSearch(q);
+    if (!search) {
+      $('save-msg').textContent = 'Сначала задайте хотя бы один фильтр.';
+      return;
+    }
+    try {
+      await saveCurrentSearch(search);
+      $('save-msg').innerHTML = 'Сохранено. <a href="/lk/?tab=saves">Открыть кабинет</a>';
+    } catch (err) {
+      if (err.status === 401) return offerLogin('Чтобы сохранить поиск и узнать о новых группах, нужен вход.');
+      $('save-msg').textContent = err.message;
+    }
+  });
+}
+
+async function refreshFollowed() {
+  followed = await favIds().catch(() => null);
+  paintFollowed();
+}
+
+function paintFollowed() {
+  for (const b of document.querySelectorAll('[data-follow]')) {
+    const on = Boolean(followed && followed.has(b.dataset.follow));
+    b.setAttribute('aria-pressed', String(on));
+    b.textContent = on ? 'Отслеживается' : 'Отслеживать';
+  }
 }
 
 /* ── изменение состояния ─────────────────────────────────────────────────── */
@@ -72,15 +131,26 @@ function toggle(dim, value) {
 /* ── контролы ────────────────────────────────────────────────────────────── */
 
 function buildDirections() {
-  const box = $('dirs');
+  // Два вида одного фильтра, и они никогда не видны одновременно:
+  // витрина плиток работает на широком экране, компактные чипы — в шторке.
+  const chips = $('dirs');
+  const tiles = $('tiles');
   for (const d of index.directions) {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'chip';
     b.dataset.dir = d.id;
-    b.innerHTML = `${esc(d.short)} <span class="chip__n"></span>`;
+    b.innerHTML = `<span class="dot" data-dir="${esc(d.id)}"></span>${esc(d.short)} <span class="chip__n"></span>`;
     b.addEventListener('click', () => toggle('directions', d.id));
-    box.append(b);
+    chips.append(b);
+
+    const t = document.createElement('button');
+    t.type = 'button';
+    t.className = 'tile';
+    t.dataset.dir = d.id;
+    t.innerHTML = `${dirIcon(d.id, 26)}<span class="tile__name">${esc(d.short)}</span><span class="tile__n"></span>`;
+    t.addEventListener('click', () => toggle('directions', d.id));
+    tiles.append(t);
   }
 }
 
@@ -327,6 +397,16 @@ function syncControls() {
     kids.append(row);
   });
   $('add-kid').hidden = q.children.length >= 4;
+  $('add-kid').textContent = q.children.length ? 'Добавить ещё ребёнка' : 'Указать возраст';
+
+  const noKids = $('no-kids');
+  const empty = q.children.length === 0;
+  noKids.hidden = !empty;
+  $('who-hint').hidden = empty;
+  if (empty && !noKids.dataset.filled) {
+    noKids.dataset.filled = '1';
+    noKids.innerHTML = `${emptyArt('age')}<p>Возраст не задан. Укажите, сколько лет ребёнку, — и в каждой карточке будет видно, сколько лет он ещё проходит в этой группе.</p>`;
+  }
 
   // режимы географии
   for (const input of $('modes').querySelectorAll('input')) {
@@ -364,13 +444,15 @@ function syncControls() {
 function renderFacets() {
   const f = facets(index, q);
 
-  for (const b of $('dirs').querySelectorAll('[data-dir]')) {
+  for (const b of document.querySelectorAll('.chip[data-dir], .tile[data-dir]')) {
     const info = f.directions.get(b.dataset.dir);
+    if (!info) continue;
     b.setAttribute('aria-pressed', info.selected ? 'true' : 'false');
     b.dataset.zero = info.count === 0 && !info.selected ? '1' : '0';
     const text = info.mode === 'delta' && info.count > 0 ? `+${info.count}` : String(info.count);
-    b.querySelector('.chip__n').textContent = text;
-    b.querySelector('.chip__n').title = facetTitle(info);
+    const out = b.querySelector('.chip__n, .tile__n');
+    out.textContent = text;
+    out.title = facetTitle(info);
   }
 
   for (const b of $('presets').querySelectorAll('[data-preset]')) {
@@ -457,11 +539,12 @@ function renderAll() {
   box.innerHTML = parts.join('');
   renderFacets();
   renderCompareBar();
+  paintFollowed();
 }
 
 function emptyBlock(res) {
   const lines = [];
-  lines.push('<div class="empty"><h2>Под эти условия ничего нет</h2>');
+  lines.push(`<div class="empty">${emptyArt('nothing')}<h2>Под эти условия ничего нет</h2>`);
 
   if (lastSuggestions.length) {
     lines.push('<p>Вот что изменит результат. Числа настоящие: каждое условие мы прогнали через поиск.</p>');
@@ -480,6 +563,15 @@ function emptyBlock(res) {
 }
 
 function onResultsClick(e) {
+  const follow = e.target.closest('[data-follow]');
+  if (follow) {
+    const id = follow.dataset.follow;
+    if (!followed) return offerLogin('Чтобы отслеживать цену и набор в этой группе, нужен вход.');
+    const on = !followed.has(id);
+    (on ? followed.add(id) : followed.delete(id), paintFollowed());
+    toggleFav(id, on).catch(() => refreshFollowed());
+    return;
+  }
   const fix = e.target.closest('[data-fix]');
   if (fix) {
     const s = lastSuggestions[Number(fix.dataset.fix)];
@@ -518,11 +610,17 @@ function renderCompareBar() {
     compare.size === 3
       ? 'Выбрано три группы — больше сравнение не вмещает'
       : `Выбрано ${compare.size} из 3`;
-  $('cmp-open').disabled = compare.size < 2;
+  $('cmp-open').disabled = compare.size === 0;
 }
 
 function openCompare() {
   const groups = [...compare].map((id) => index.byId.get(id)).filter(Boolean);
+  if (groups.length < 2) {
+    $('cmpdlg-body').innerHTML = `<div class="nothing-here">${emptyArt('compare')}
+      <p>Сравнивать пока нечего: выбрана одна группа. Отметьте ещё одну или две — покажем цену, расписание и адрес рядом.</p></div>`;
+    $('cmpdlg').showModal();
+    return;
+  }
   const rows = [
     ['Организация', (g) => esc(g.org.name)],
     ['Адрес', (g) => `${esc(g.branch.address)}<br><span class="muted">${esc(g.branch.stationName)}, ${distance(g.branch.metroDistance)}</span>`],

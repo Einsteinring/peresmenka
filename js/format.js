@@ -59,10 +59,13 @@ export function intake(isoDate, now = new Date()) {
   const start = new Date(`${isoDate}T00:00:00`);
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const days = Math.round((start - today) / 86400000);
-  if (days <= 0) return { text: 'набор идёт', soon: true, days };
-  if (days === 1) return { text: 'старт завтра', soon: true, days };
-  if (days <= 30) return { text: `старт ${dateShort(isoDate)}`, soon: true, days };
-  return { text: `старт ${dateShort(isoDate)}`, soon: false, days };
+  // urgent — единственное, что подсвечивается: время поджимает, места
+  // разбирают. «Набор идёт» к этому не относится, это спокойное состояние.
+  const urgent = days > 0 && days <= 14;
+  if (days <= 0) return { text: 'набор идёт', soon: true, urgent: false, days };
+  if (days === 1) return { text: 'старт завтра', soon: true, urgent: true, days };
+  if (days <= 30) return { text: `старт ${dateShort(isoDate)}`, soon: true, urgent, days };
+  return { text: `старт ${dateShort(isoDate)}`, soon: false, urgent: false, days };
 }
 
 // «пн, чт» или «пн, ср, пт»

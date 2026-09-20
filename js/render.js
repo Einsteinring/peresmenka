@@ -3,6 +3,7 @@
 // так карточка в выдаче и карточка на SEO-странице не могут разойтись.
 
 import { ageNote, GRID } from './model.js';
+import { coverSvg, dirIcon } from './visual.js';
 import {
   DAY_SHORT, distance, groupsWord, intake, lessonsWord, plural, price, span, time, yearsWord
 } from './format.js';
@@ -100,8 +101,11 @@ export function groupCard(item, opts = {}) {
       : `пробное ${price(g.priceSingle)}`
     : 'без пробного';
 
-  return `<article class="card"${opts.id ? ` id="${esc(opts.id)}"` : ''}>
+  return `<article class="card" data-dir="${esc(g.direction)}"${opts.id ? ` id="${esc(opts.id)}"` : ''}>
+  <div class="card__cover">${coverSvg(g, 88, 240)}${dirIcon(g.direction, 20)}</div>
+  <div class="card__body">
   <div class="card__head">
+    <span class="card__mark">${dirIcon(g.direction, 18)}</span>
     <h3 class="card__title"><a href="${groupUrl(g)}">${esc(g.dir.short)}: ${esc(g.title)}</a>${subtype}</h3>
     <p class="card__org">${esc(g.org.name)}</p>
   </div>
@@ -118,7 +122,7 @@ export function groupCard(item, opts = {}) {
   <dl class="card__facts">
     <div><dt>В месяц</dt><dd class="num">${price(g.priceMonth)}</dd></div>
     <div><dt>Разово</dt><dd class="num">${price(g.priceSingle)}</dd></div>
-    <div><dt>Набор</dt><dd${start.soon ? ' class="soon"' : ''}>${start.text}</dd></div>
+    <div><dt>Набор</dt><dd${start.urgent ? ' class="urgent"' : ''}>${start.text}</dd></div>
     <div><dt>Уровень</dt><dd>${g.level === 'start' ? 'с нуля' : 'продолжающие'}</dd></div>
   </dl>
 
@@ -130,8 +134,10 @@ export function groupCard(item, opts = {}) {
 
   ${opts.compare === false ? '' : `<div class="card__actions">
     <a class="btn btn--quiet" href="${groupUrl(g)}">Подробно и запись</a>
+    <button type="button" class="follow" data-follow="${g.id}" aria-pressed="false">Отслеживать</button>
     <label class="cmp"><input type="checkbox" class="cmp__box" value="${g.id}"${opts.compared ? ' checked' : ''}> Сравнить</label>
   </div>`}
+  </div>
 </article>`;
 }
 
@@ -144,8 +150,8 @@ export function groupRow(g, opts = {}) {
   const place = opts.distance == null
     ? esc(g.branch.stationName)
     : `${esc(g.branch.stationName)} — ${distance(opts.distance)} ${opts.distanceTo ? `до «${esc(opts.distanceTo)}»` : 'отсюда'} по прямой`;
-  return `<li class="row">
-  <h3 class="row__title"><a href="${groupUrl(g)}">${esc(g.dir.short)}: ${esc(g.title)}</a></h3>
+  return `<li class="row" data-dir="${esc(g.direction)}">
+  <h3 class="row__title">${opts.dot ? '<span class="dot"></span>' : ''}<a href="${groupUrl(g)}">${esc(g.dir.short)}: ${esc(g.title)}</a></h3>
   <p class="row__org">${esc(g.org.name)}, ${esc(g.branch.address)}</p>
   <p class="row__meta">
     <span>${g.ageFrom}—${g.ageTo} ${plural(g.ageTo, 'год', 'года', 'лет')}</span>
@@ -166,7 +172,8 @@ export function togetherCard(variant, children) {
     .map((e) => {
       const g = e.item.group;
       const when = e.lessons.map((l) => `${DAY_SHORT[l.day]} ${span(l.start, l.end)}`).join(', ');
-      return `<li><span class="tog__who">${who(e.children)}</span>
+      return `<li data-dir="${esc(g.direction)}"><span class="tog__who">${who(e.children)}</span>
+        <span class="dot"></span>
         <a href="${groupUrl(g)}">${esc(g.dir.short)}: ${esc(g.title)}</a>
         <span class="tog__when">${when}</span>
         <span class="num">${price(g.priceMonth)}</span></li>`;

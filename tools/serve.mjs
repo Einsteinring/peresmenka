@@ -1,9 +1,12 @@
-// Локальный статический сервер. Ведёт себя как хостинг: /путь/ отдаёт
-// index.html из каталога. Нужен потому, что модули не грузятся с file://.
+// Локальный сервер. Ведёт себя как хостинг: /путь/ отдаёт index.html из
+// каталога, а /api/* исполняет функцию из api/ так же, как это делает
+// Vercel. Нужен потому, что модули не грузятся с file://, а кабинет без
+// работающих функций не проверить.
 
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, extname, join, normalize } from 'node:path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -22,11 +25,45 @@ const TYPES = {
   '.ico': 'image/x-icon'
 };
 
+// Функции Vercel на Node получают обычные req и res, поэтому подменять здесь
+// нечего: надо найти файл и позвать его default export. Файлы из api/_lib
+// не роутятся — подчёркивание не проходит проверку имени.
+async function runApi(req, res, path) {
+  // И /api/me, и /api/me/ — один адрес: на Vercel включён trailingSlash,
+  // и он может переписывать одно в другое.
+  const rel = path.slice('/api/'.length).replace(/\/+$/, '');
+  if (!/^[a-z0-9/-]+$/.test(rel) || rel.includes('..')) {
+    res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ error: 'Нет такой функции' }));
+    return;
+  }
+  const file = join(ROOT, 'api', rel + '.mjs');
+  if (!existsSync(file)) {
+    res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ error: 'Нет функции /api/' + rel }));
+    return;
+  }
+  // ?t= сбрасывает кэш модулей: правки подхватываются без перезапуска сервера.
+  const mod = await import(pathToFileURL(file).href + '?t=' + Date.now());
+  await mod.default(req, res);
+}
+
 createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   let path = decodeURIComponent(url.pathname);
   if (path.includes('\0')) {
     res.writeHead(400).end('bad request');
+    return;
+  }
+
+  if (path.startsWith('/api/')) {
+    try {
+      await runApi(req, res, path);
+    } catch (err) {
+      console.error(err);
+      if (!res.headersSent) res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: String(err.message || err) }));
+    }
     return;
   }
 

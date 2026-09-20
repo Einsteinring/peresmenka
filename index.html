@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-bot="">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -22,6 +22,7 @@
   <div class="top__in">
     <a class="mark" href="/">Пересменка</a>
     <p class="top__demo">Демонстрационный каталог. Организации, педагоги, адреса занятий и расписание вымышлены; районы и станции метро настоящие.</p>
+    <div class="top__me" id="topme"></div>
   </div>
 </header>
 
@@ -29,6 +30,10 @@
 
   <h1 class="lede">Кружок между работой и школой</h1>
   <p class="sub">Три вещи решают всё: возраст ребёнка, окно в вашем расписании и дорога. Задайте их — список пересчитается сразу.</p>
+
+  <fieldset class="tiles" id="tiles">
+    <legend>С чего начать</legend>
+  </fieldset>
 
   <form class="builder" id="builder" data-sheet="closed">
 
@@ -47,8 +52,9 @@
       <section class="panel panel--who" aria-labelledby="who-t">
         <h3 class="panel__t" id="who-t">Кому</h3>
         <div class="kids" id="kids"></div>
+        <div class="nothing-here" id="no-kids"></div>
         <button type="button" class="btn btn--add" id="add-kid">Добавить ребёнка</button>
-        <p class="panel__hint">Подходит, если возраст попадает в диапазон группы. Группы, где ребёнок младше или старше на год, показываем отдельно.</p>
+        <p class="panel__hint" id="who-hint">Подходит, если возраст попадает в диапазон группы. Группы, где ребёнок младше или старше на год, показываем отдельно.</p>
       </section>
 
       <section class="panel panel--when" aria-labelledby="when-t">
@@ -125,7 +131,10 @@
       <label class="strictbox"><input type="checkbox" id="strict"> все занятия в окне</label>
       <button type="button" class="btn btn--quiet" id="reset">Сбросить</button>
     </div>
+    <div class="savebar" id="savebar"></div>
   </div>
+
+  <div id="saveslot"></div>
 
   <div id="results" class="results" tabindex="-1"></div>
 

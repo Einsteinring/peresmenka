@@ -70,7 +70,7 @@ export function loginPanel(reason) {
 
 window.onTelegramAuth = async (user) => {
   try {
-    const res = await fetch('/api/auth/telegram', {
+    const res = await fetch('/api/auth/telegram/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(user),
@@ -160,7 +160,7 @@ export async function mountTopbar(root, { onState } = {}) {
 
   drop.addEventListener('click', async (e) => {
     if (e.target.id === 'bell-all') {
-      const res = await fetch('/api/notes', {
+      const res = await fetch('/api/notes/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ all: true }),

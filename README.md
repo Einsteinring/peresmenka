@@ -490,11 +490,25 @@ npm test
 Все переменные перечислены в `.env.example`. На Vercel они задаются
 в Settings → Environment Variables.
 
+Адреса функций пишутся **со слэшем на конце**: в `vercel.json` включён
+`trailingSlash`, и без него каждый запрос получает 308 и идёт в два захода.
+`CRON_SECRET` должен быть из латиницы и цифр — Vercel отправляет его
+заголовком и отказывается собирать проект, если там кириллица.
+
+Проверить, какое хранилище подключено на самом деле:
+
+```bash
+curl -s https://peresmenka.vercel.app/api/me/
+```
+
+Поле `store` скажет `upstash` или `memory`. Если `memory`, переменные Upstash
+не доехали, и кабинет будет терять данные между запросами.
+
 Крон настроен в `vercel.json` и ходит раз в сутки в 6 утра UTC. Его же можно
 дёрнуть руками:
 
 ```bash
-curl -H "Authorization: Bearer $CRON_SECRET" https://peresmenka.vercel.app/api/cron/match
+curl -H "Authorization: Bearer $CRON_SECRET" https://peresmenka.vercel.app/api/cron/match/
 ```
 
 ## Устройство кода

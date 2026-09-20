@@ -6,6 +6,9 @@
 
 export const isDemo = () => new URLSearchParams(location.search).get('demo') === '1';
 
+// Слэш на конце обязателен. В vercel.json включён trailingSlash, и адрес
+// без него получает 308 на адрес со слэшем — то есть каждый запрос кабинета
+// шёл бы в два захода. Локальный сервер понимает обе формы.
 async function req(path, method = 'GET', body) {
   const res = await fetch(path, {
     method,
@@ -23,7 +26,7 @@ async function req(path, method = 'GET', body) {
 function liveAccount() {
   let state = null;
   const refresh = async () => {
-    state = await req('/api/me');
+    state = await req('/api/me/');
     return state;
   };
   const patch = (part) => {
@@ -37,16 +40,16 @@ function liveAccount() {
       return state;
     },
     load: refresh,
-    saveSearch: async (search, name) => patch(await req('/api/saves', 'POST', { search, name })),
-    updateSave: async (id, fields) => patch(await req('/api/saves', 'POST', { id, ...fields })),
-    removeSave: async (id) => patch(await req('/api/saves', 'DELETE', { id })),
-    addFav: async (groupId) => patch(await req('/api/favs', 'POST', { groupId })),
-    removeFav: async (groupId) => patch(await req('/api/favs', 'DELETE', { groupId })),
-    setLeadStatus: async (id, status) => patch(await req('/api/leads', 'POST', { id, status })),
-    markRead: async (id) => patch(await req('/api/notes', 'POST', id === 'all' ? { all: true } : { id })),
-    setPrefs: async (prefs) => patch(await req('/api/prefs', 'POST', prefs)),
+    saveSearch: async (search, name) => patch(await req('/api/saves/', 'POST', { search, name })),
+    updateSave: async (id, fields) => patch(await req('/api/saves/', 'POST', { id, ...fields })),
+    removeSave: async (id) => patch(await req('/api/saves/', 'DELETE', { id })),
+    addFav: async (groupId) => patch(await req('/api/favs/', 'POST', { groupId })),
+    removeFav: async (groupId) => patch(await req('/api/favs/', 'DELETE', { groupId })),
+    setLeadStatus: async (id, status) => patch(await req('/api/leads/', 'POST', { id, status })),
+    markRead: async (id) => patch(await req('/api/notes/', 'POST', id === 'all' ? { all: true } : { id })),
+    setPrefs: async (prefs) => patch(await req('/api/prefs/', 'POST', prefs)),
     logout: async () => {
-      await req('/api/auth/logout', 'POST');
+      await req('/api/auth/logout/', 'POST');
       state = { user: null };
       return state;
     }
@@ -124,11 +127,11 @@ export const createAccount = () => (isDemo() ? demoAccount() : liveAccount());
 export async function favIds() {
   // Спрашиваем /api/me, а не /api/favs: гостю он отвечает 200 с user: null,
   // и в консоли не остаётся красного 401 на каждой загрузке страницы.
-  const data = await req('/api/me').catch(() => ({ user: null }));
+  const data = await req('/api/me/').catch(() => ({ user: null }));
   if (!data.user) return null;
   return new Set((data.favs || []).map((f) => f.id));
 }
 
-export const toggleFav = (groupId, on) => req('/api/favs', on ? 'POST' : 'DELETE', { groupId });
-export const saveCurrentSearch = (search) => req('/api/saves', 'POST', { search });
-export const me = () => req('/api/me');
+export const toggleFav = (groupId, on) => req('/api/favs/', on ? 'POST' : 'DELETE', { groupId });
+export const saveCurrentSearch = (search) => req('/api/saves/', 'POST', { search });
+export const me = () => req('/api/me/');

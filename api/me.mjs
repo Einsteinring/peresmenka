@@ -7,14 +7,18 @@
 import { handler, ok } from './_lib/http.mjs';
 import { currentUser, keyOf } from './_lib/session.mjs';
 import { getPrefs, unreadCount } from './_lib/notify.mjs';
-import { readItems } from './_lib/redis.mjs';
+import { readItems, usingMemory } from './_lib/redis.mjs';
 import { getIndex } from './_lib/catalog.mjs';
 import { advanceLeads, decorateFavs, decorateLeads, decorateSaves } from './_lib/account.mjs';
 
 export default handler(async (req, res) => {
   const user = await currentUser(req);
   const bot = process.env.TELEGRAM_BOT_USERNAME || '';
-  if (!user) return ok(res, { user: null, bot });
+  // Какое хранилище подключено на самом деле. Без этого поля забытые
+  // переменные Upstash выглядят как работающий сайт, на котором просто
+  // ничего не сохраняется между запросами.
+  const store = usingMemory ? 'memory' : 'upstash';
+  if (!user) return ok(res, { user: null, bot, store });
 
   const { uid } = user;
   const [prefs, saves, favs, leadsRaw, notes] = await Promise.all([
@@ -33,6 +37,7 @@ export default handler(async (req, res) => {
   ok(res, {
     user: user.profile,
     bot,
+    store,
     prefs,
     unread: unreadCount(notes),
     notes: notes.slice(0, 30),

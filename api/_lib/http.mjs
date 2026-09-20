@@ -18,7 +18,15 @@ export const notFound = (res) => json(res, 404, { error: 'Не найдено' }
 // должна стать честным 400, а не «внутренней ошибкой»: сломанный запрос
 // шлёт бот, а не наш код ломается.
 export async function readBody(req) {
-  let value = req.body;
+  let value;
+  try {
+    // На Vercel это ленивый геттер: он сам разбирает JSON и бросает прямо
+    // на обращении, если тело кривое. Поэтому даже чтение свойства — внутри
+    // try, иначе ошибка минует всю обработку ниже и станет 500.
+    value = req.body;
+  } catch {
+    throw Object.assign(new Error('Ожидался объект JSON'), { status: 400 });
+  }
 
   if (value === undefined || value === null) {
     const chunks = [];

@@ -13,18 +13,38 @@ export const bad = (res, message) => json(res, 400, { error: message });
 export const unauthorized = (res) => json(res, 401, { error: 'Нужен вход' });
 export const notFound = (res) => json(res, 404, { error: 'Не найдено' });
 
+// Тело читается по-разному: локальный сервер отдаёт поток, Vercel уже
+// разобранный объект, а на кривом JSON — что угодно. Любая неудача здесь
+// должна стать честным 400, а не «внутренней ошибкой»: сломанный запрос
+// шлёт бот, а не наш код ломается.
 export async function readBody(req) {
-  if (req.body !== undefined && req.body !== null) {
-    return typeof req.body === 'string' ? safeParse(req.body) : req.body;
+  let value = req.body;
+
+  if (value === undefined || value === null) {
+    const chunks = [];
+    let size = 0;
+    try {
+      for await (const chunk of req) {
+        size += chunk.length;
+        if (size > 64 * 1024) throw Object.assign(new Error('Тело запроса слишком большое'), { status: 413 });
+        chunks.push(chunk);
+      }
+    } catch (err) {
+      if (err.status) throw err;
+      throw Object.assign(new Error('Не удалось прочитать тело запроса'), { status: 400 });
+    }
+    value = Buffer.concat(chunks).toString('utf8');
   }
-  const chunks = [];
-  let size = 0;
-  for await (const chunk of req) {
-    size += chunk.length;
-    if (size > 64 * 1024) throw Object.assign(new Error('Тело запроса слишком большое'), { status: 413 });
-    chunks.push(chunk);
+
+  if (Buffer.isBuffer(value)) value = value.toString('utf8');
+  if (typeof value === 'string') value = safeParse(value);
+
+  // Массив, число или строка вместо объекта — не то, чего ждёт любой
+  // обработчик, и разбираться с этим по месту не нужно.
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw Object.assign(new Error('Ожидался объект JSON'), { status: 400 });
   }
-  return safeParse(Buffer.concat(chunks).toString('utf8'));
+  return value;
 }
 
 function safeParse(text) {

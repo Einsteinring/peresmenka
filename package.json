@@ -1,0 +1,13 @@
+{
+  "name": "peresmenka",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "data": "node tools/gen-data.mjs",
+    "pages": "node tools/build-seo.mjs",
+    "build": "node tools/gen-data.mjs && node tools/build-seo.mjs",
+    "serve": "node tools/serve.mjs",
+    "test": "node --test \"test/*.test.mjs\""
+  }
+}

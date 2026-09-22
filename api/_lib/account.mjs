@@ -5,9 +5,9 @@ import { search } from '../../js/model.js';
 import { parseQuery } from '../../js/state.js';
 import { describeQuery } from '../../js/describe.js';
 import { dateShort, distance, span, DAY_SHORT } from '../../js/format.js';
-import { keyOf } from './session.mjs';
+import { keyOf, saveProfile } from './session.mjs';
 import { updateItems } from './redis.mjs';
-import { notify } from './notify.mjs';
+import { getPrefs, notify, savePrefs } from './notify.mjs';
 
 export const LEAD_STAGES = ['sent', 'replied', 'visited', 'cancelled'];
 export const STAGE_NAMES = {
@@ -16,6 +16,26 @@ export const STAGE_NAMES = {
   visited: 'посещено',
   cancelled: 'отменена'
 };
+
+/* ── первый вход ─────────────────────────────────────────────────────────── */
+
+// Что происходит при входе — одинаково для обоих способов: и для виджета,
+// и для ссылки на бота. Держать это в одном месте важнее, чем сэкономить
+// файл: разойдясь, два входа дали бы пользователей с разными правами.
+//
+// tgOk — можно ли боту писать первым. У виджета это галочка request_access,
+// у ссылки на бота право возникает само: человек нажал Start, то есть
+// написал боту первым.
+export async function registerUser(profile, { tgOk = true } = {}) {
+  const uid = String(profile.id);
+  await saveProfile(uid, profile);
+  const prefs = await getPrefs(uid);
+  await savePrefs(uid, { ...prefs, tg_ok: tgOk });
+  // Реестр входивших: крону нужно кого-то обходить, а KEYS по базе —
+  // плохая привычка, которая однажды упрётся в размер.
+  await updateItems('users', (list) => (list.includes(uid) ? undefined : [...list, uid]));
+  return uid;
+}
 
 const groupView = (g) => ({
   id: g.id,

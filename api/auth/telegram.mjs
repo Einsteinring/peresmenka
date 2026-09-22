@@ -1,10 +1,12 @@
 // Вход через Telegram Login Widget.
+//
+// Второй способ — вход по ссылке на бота, он в api/auth/link.mjs. Оба
+// заканчиваются одним и тем же: registerUser и обычная сессия.
 
 import { handler, json, methodIs, ok, originAllowed, readBody } from '../_lib/http.mjs';
 import { checkLogin } from '../_lib/telegram.mjs';
-import { saveProfile, startSession } from '../_lib/session.mjs';
-import { getPrefs, savePrefs } from '../_lib/notify.mjs';
-import { updateItems } from '../_lib/redis.mjs';
+import { startSession } from '../_lib/session.mjs';
+import { registerUser } from '../_lib/account.mjs';
 
 export default handler(async (req, res) => {
   if (!methodIs(req, 'POST')) return json(res, 405, { error: 'Только POST' });
@@ -19,15 +21,8 @@ export default handler(async (req, res) => {
     return json(res, 401, { error: 'Вход не подтвердился. Попробуйте ещё раз.' });
   }
 
-  const uid = String(result.profile.id);
-  await saveProfile(uid, result.profile);
   // Виджет с data-request-access="write" означает, что боту разрешили писать.
-  // Если это первый вход, включаем оба канала.
-  const prefs = await getPrefs(uid);
-  await savePrefs(uid, { ...prefs, tg_ok: true });
-  // Реестр входивших: крону нужно кого-то обходить, а KEYS по базе —
-  // плохая привычка, которая однажды упрётся в размер.
-  await updateItems('users', (list) => (list.includes(uid) ? undefined : [...list, uid]));
+  const uid = await registerUser(result.profile, { tgOk: true });
   await startSession(res, uid);
 
   ok(res, { user: result.profile });

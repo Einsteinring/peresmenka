@@ -41,6 +41,11 @@ function memoryCommand(args) {
       expiries.delete(key);
       return had ? 1 : 0;
     }
+    case 'INCR': {
+      const next = (alive(key) ? Number(memory.get(key)) : 0) + 1;
+      memory.set(key, String(next));
+      return next;
+    }
     case 'EXPIRE':
       expiries.set(key, Date.now() + Number(rest[0]) * 1000);
       return 1;

@@ -5,12 +5,28 @@
 
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, extname, join, normalize } from 'node:path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT) || 5180;
+
+// Переменные подхватываются сами, без --env-file: сервер запускают и из
+// npm run serve, и из редактора, и забытый флаг выглядит как «кабинет
+// сломался», хотя дело в пустом окружении. Заданное снаружи не трогаем.
+for (const name of ['.env.local', '.env']) {
+  const file = join(ROOT, name);
+  if (!existsSync(file)) continue;
+  for (const line of readFileSync(file, 'utf8').split('\n')) {
+    if (line.trimStart().startsWith('#')) continue;
+    const m = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line);
+    if (!m || process.env[m[1]] !== undefined) continue;
+    const value = m[2];
+    const quoted = value.length > 1 && (value[0] === '"' || value[0] === "'") && value.at(-1) === value[0];
+    process.env[m[1]] = quoted ? value.slice(1, -1) : value;
+  }
+}
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',

@@ -798,6 +798,42 @@ a:hover { text-decoration-color: currentColor; }
 .login__demo { margin: .75rem 0 0; }
 .login__off { margin: .5rem 0 0; font-size: var(--t-small); color: var(--amber); }
 
+/* вход через приложение: основной путь */
+
+.login__ways { display: flex; flex-direction: column; gap: .625rem; align-items: flex-start; }
+.login__app { display: inline-flex; align-items: center; gap: .4rem; }
+.login__app .ic { width: 1.125rem; height: 1.125rem; }
+
+.login__step {
+  align-self: stretch;
+  border: 1px solid var(--edge); border-radius: 6px; background: var(--paper);
+  padding: .75rem .875rem;
+}
+.login__code-cap { margin: 0; font-size: var(--t-small); color: var(--ink-soft); }
+.login__code {
+  margin: .125rem 0 .625rem; font-family: var(--disp); font-size: 1.75rem; line-height: 1.1;
+  letter-spacing: .18em; font-variant-numeric: tabular-nums;
+}
+.login__go { margin: 0 0 .5rem; }
+.login__go .btn { display: inline-flex; align-items: center; gap: .4rem; }
+.login__go .ic { width: 1.125rem; height: 1.125rem; }
+.login__wait { margin: 0; font-size: var(--t-small); color: var(--ink-soft); }
+.login__again { margin: .5rem 0 0; }
+
+.login__alt summary { font-size: var(--t-small); color: var(--ink-soft); cursor: pointer; }
+.login__alt summary:hover { color: var(--ink); }
+.login__alt[open] summary { margin-bottom: .5rem; }
+.login__hint { margin: .5rem 0 0; font-size: var(--t-small); color: var(--ink-soft); max-width: 44ch; }
+
+/* Кнопка-ссылка нужна и на главной, и в кабинете, поэтому живёт здесь,
+   а не в css/lk.css: без этого «Скрыть» в панели входа на главной
+   оставалась серой системной кнопкой. */
+.linkbtn {
+  border: 0; background: none; font: inherit; font-size: var(--t-small);
+  color: var(--ink-soft); text-decoration: underline; cursor: pointer; padding: 0;
+}
+.linkbtn:hover { color: var(--ink); }
+
 .savebar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-left: auto; }
 .savebar__msg { font-size: var(--t-small); color: var(--ink-soft); }
 

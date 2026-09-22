@@ -72,8 +72,7 @@
 .lks__acts { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; padding-top: .625rem; border-top: 1px solid var(--edge-soft); }
 
 .switch { display: inline-flex; align-items: center; gap: .4rem; font-size: var(--t-small); color: var(--ink-soft); cursor: pointer; }
-.linkbtn { border: 0; background: none; font: inherit; font-size: var(--t-small); color: var(--ink-soft); text-decoration: underline; cursor: pointer; padding: 0; }
-.linkbtn:hover { color: var(--ink); }
+/* .linkbtn переехала в css/app.css: она нужна и на главной. */
 
 /* настройки */
 

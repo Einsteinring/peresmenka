@@ -54,6 +54,12 @@ async function api(method, payload) {
   return body.result;
 }
 
+// Ветки завершаются обычным return, а не process.exit: с ключом
+// --use-env-proxy агент прокси держит сокет, и резкий выход роняет libuv
+// ассертом уже после всего вывода. Выглядит как поломка, хотя всё сделано.
+await main();
+
+async function main() {
 const who = await api('getMe');
 console.log(`Бот: @${who.username}\n`);
 
@@ -69,13 +75,13 @@ if (arg === '--info') {
   }
   console.log('');
   console.log('Если тут 401 — на Vercel не задан TELEGRAM_WEBHOOK_SECRET или он не тот, чем привязывали.');
-  process.exit(0);
+  return;
 }
 
 if (arg === '--delete') {
   await api('deleteWebhook', { drop_pending_updates: true });
   console.log('Вебхук отвязан. Вход по ссылке на бота работать не будет.');
-  process.exit(0);
+  return;
 }
 
 if (!ORIGIN) die('Нет SITE_ORIGIN.');
@@ -101,3 +107,4 @@ const info = await api('getWebhookInfo');
 console.log(`Вебхук привязан: ${info.url}`);
 console.log('Обновления: message, callback_query. Остальное Telegram нам не шлёт.');
 console.log('\nПроверить потом: node --env-file=.env tools/set-webhook.mjs --info');
+}

@@ -65,6 +65,12 @@ export async function command(...args) {
     headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(args.map(String))
   });
+  if (res.status === 403) {
+    // У Upstash два REST-токена, и в консоли они лежат рядом. С токеном
+    // «только чтение» сайт выглядит рабочим: каталог открывается, кабинет
+    // отвечает, а любая запись падает. Пусть в логе будет сказано прямо.
+    throw new Error(`upstash 403 на ${String(args[0]).toUpperCase()}: похоже, взят токен только для чтения`);
+  }
   if (!res.ok) throw new Error(`upstash ${res.status}`);
   const body = await res.json();
   if (body.error) throw new Error(`upstash: ${body.error}`);

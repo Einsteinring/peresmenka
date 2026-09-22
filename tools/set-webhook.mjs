@@ -29,11 +29,26 @@ const die = (msg) => {
 if (!TOKEN) die('Нет TELEGRAM_BOT_TOKEN.');
 
 async function api(method, payload) {
-  const res = await fetch(`https://api.telegram.org/bot${TOKEN}/${method}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload || {})
-  });
+  let res;
+  try {
+    res = await fetch(`https://api.telegram.org/bot${TOKEN}/${method}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload || {})
+    });
+  } catch (err) {
+    // Самая частая причина не «Telegram недоступен», а прокси: curl берёт
+    // HTTPS_PROXY из окружения сам, а fetch в Node — только по флагу.
+    const proxy = process.env.HTTPS_PROXY || process.env.https_proxy;
+    console.error(`Не удалось достучаться до api.telegram.org: ${err.cause?.code || err.message}`);
+    if (proxy) {
+      console.error(`\nВ окружении есть прокси ${proxy}, но fetch его не видит. Повторите так:`);
+      console.error('  node --use-env-proxy --env-file=.env tools/set-webhook.mjs');
+    } else {
+      console.error('\nПохоже, Telegram отсюда не открывается. Включите VPN и повторите.');
+    }
+    process.exit(1);
+  }
   const body = await res.json().catch(() => ({}));
   if (!body.ok) die(`${method}: ${body.description || res.status}`);
   return body.result;

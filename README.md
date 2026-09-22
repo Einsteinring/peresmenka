@@ -550,6 +550,14 @@ npm test
    Проверить потом: тот же файл с `--info`, отвязать — с `--delete`. Адрес
    вебхука ставится **со слэшем на конце**: за редиректом Telegram не ходит,
    а `trailingSlash` без слэша отдаёт 308.
+
+   Если команда упала таймаутом, а Telegram у вас открывается через
+   локальный прокси — `fetch` в Node не берёт `HTTPS_PROXY` из окружения,
+   в отличие от curl. Тогда так:
+
+   ```bash
+   node --use-env-proxy --env-file=.env tools/set-webhook.mjs
+   ```
 6. В Upstash создать базу и взять REST URL и токен.
 7. Придумать `CRON_SECRET`: без него `/api/cron/match` отвечает 401.
 

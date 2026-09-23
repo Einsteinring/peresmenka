@@ -411,3 +411,313 @@ body { position: relative; overflow-x: clip; }
 @media (prefers-reduced-motion: reduce) {
   .mobilebar, .mobilebar:not([data-away='1']) { transition: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Подбор за три шага
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.podbor { position: relative; display: flex; flex-direction: column; gap: 22px; padding-top: 72px; }
+.podbor :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: 12px; }
+
+/* Конфетти у шагов: бирюзовый круг слева, как в эталоне. */
+.podbor::before {
+  content: ''; position: absolute; left: calc(var(--edge-x) * -1 + 28px); top: 150px;
+  width: 24px; height: 24px; border-radius: 50%; background: var(--mint); display: none;
+}
+/* Ещё два у шагов: голубой квадратик справа и сиреневая звёздочка слева
+   внизу — на тех же местах относительно секции, что и в эталоне. */
+.podbor::after {
+  content: ''; position: absolute; right: calc(var(--edge-x) * -1 + 52px); top: 58px;
+  width: 18px; height: 18px; border-radius: 4px; background: var(--sky); transform: rotate(20deg); display: none;
+}
+.podbor__star { position: absolute; left: calc(var(--edge-x) * -1 + 30px); bottom: -8px; width: 16px; height: 16px; fill: var(--lilac); display: none; }
+@media (min-width: 1200px) { .podbor::before, .podbor::after, .podbor__star { display: block; } }
+
+.builder__head, .dirs, .sheet-apply { display: none; }
+
+.steps { display: grid; grid-template-columns: 340px minmax(0, 1fr) 300px; gap: 24px; align-items: stretch; }
+
+.step {
+  box-sizing: border-box; min-width: 0; padding: 28px;
+  display: flex; flex-direction: column; gap: 18px;
+  background: var(--white); border: var(--line) solid var(--ink); border-radius: 28px; box-shadow: var(--lift-xl);
+}
+.step--who { gap: 20px; }
+.step__head { display: flex; align-items: center; gap: 12px; }
+.step__n {
+  flex: none; width: 40px; height: 40px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 999px; border: var(--line) solid var(--ink);
+  font-family: var(--f-disp); font-weight: 700; font-size: 17px;
+}
+.step--who .step__n { background: var(--pink); }
+.step--when .step__n { background: var(--mint); }
+.step--where .step__n { background: var(--sky); }
+.step__t { margin: 0; font-family: var(--f-disp); font-weight: 700; font-size: 20px; line-height: 1.2; }
+.step__text { margin: 0; font-size: 16px; line-height: 1.5; font-weight: 600; }
+
+.step__btn {
+  margin-top: auto; height: 52px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 16px; background: var(--ink); color: var(--white); border: var(--line) solid var(--ink);
+  font: 900 17px var(--f-body); cursor: pointer;
+}
+.step__btn::before { content: "+"; font-size: 24px; line-height: 1; margin-top: -2px; }
+.step__btn:hover { background: #3a2c62; }
+.step__btn--light { margin-top: 0; background: var(--white); color: var(--ink); height: 46px; font-size: 16px; }
+.step__btn--light::before { content: none; }
+.step__btn--light:hover { background: var(--paper); }
+
+/* ── шаг 1: кому ─────────────────────────────────────────────────────────── */
+
+.kidbox { padding: 22px 18px 18px; background: #fff1f6; border-radius: 20px; display: flex; flex-direction: column; gap: 14px; }
+.kids:empty { display: none; }
+
+.agescale { display: flex; flex-direction: column; gap: 14px; }
+.agescale__track {
+  position: relative; display: block; height: 8px; margin: 13px 0;
+  border-radius: 999px; background: #ffd3e4; border: 2px solid var(--ink);
+}
+.agescale__knob {
+  position: absolute; left: 38%; top: 50%; transform: translate(-50%, -50%);
+  width: 30px; height: 30px; box-sizing: border-box; border-radius: 999px;
+  background: var(--white); border: 3px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+}
+.agescale__marks { display: flex; justify-content: space-between; font-family: var(--f-disp); font-size: 13px; font-weight: 600; }
+
+.kids { display: flex; flex-direction: column; gap: 16px; }
+.kid { display: flex; flex-direction: column; gap: 10px; }
+.kid + .kid { padding-top: 16px; border-top: 2px dashed #ffb8d2; }
+
+.kid__slider {
+  --p: 38%;
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 30px; margin: 0; background: none; cursor: pointer;
+}
+.kid__slider::-webkit-slider-runnable-track {
+  height: 8px; border-radius: 999px; border: 2px solid var(--ink);
+  background: linear-gradient(90deg, var(--pink) var(--p), #ffd3e4 var(--p));
+}
+.kid__slider::-moz-range-track { height: 8px; border-radius: 999px; border: 2px solid var(--ink); background: #ffd3e4; }
+.kid__slider::-moz-range-progress { height: 8px; border-radius: 999px; background: var(--pink); }
+.kid__slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; margin-top: -13px;
+  width: 30px; height: 30px; border-radius: 999px;
+  background: var(--white); border: 3px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+}
+.kid__slider::-moz-range-thumb {
+  width: 24px; height: 24px; border-radius: 999px;
+  background: var(--white); border: 3px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+}
+
+.kid__line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.kid__agebox {
+  flex: none; height: 40px; box-sizing: border-box; padding: 0 10px 0 6px;
+  display: flex; align-items: center; gap: 2px;
+  background: var(--white); border: var(--line) solid var(--ink); border-radius: 12px;
+  font-weight: 800; font-size: 14px;
+}
+.kid__age {
+  width: 2.2em; border: 0; background: none; padding: 0; text-align: right;
+  font: 700 17px var(--f-disp); color: var(--ink); -moz-appearance: textfield;
+}
+.kid__age::-webkit-inner-spin-button, .kid__age::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.kid__name {
+  flex: 1 1 auto; min-width: 0; height: 40px; box-sizing: border-box; padding: 0 10px;
+  background: var(--white); border: var(--line) solid var(--ink); border-radius: 12px;
+  font: 700 14px var(--f-body); color: var(--ink);
+}
+.kid__name::placeholder { color: #7d7399; }
+.kid__drop {
+  flex: none; border: 0; background: none; padding: 4px 2px; cursor: pointer;
+  font: 800 13px var(--f-body); color: var(--ink); text-decoration: underline; text-decoration-color: var(--coral);
+}
+
+/* ── шаг 2: когда ────────────────────────────────────────────────────────── */
+
+.presets { display: flex; flex-wrap: wrap; gap: 10px; }
+.presets .chip {
+  height: 44px; box-sizing: border-box; padding: 0 16px;
+  display: inline-flex; align-items: center; gap: 8px;
+  border-radius: 999px; background: var(--white); border: var(--line) solid var(--ink);
+  font: 800 15px var(--f-body); color: var(--ink); cursor: pointer;
+}
+.presets .chip:hover { background: var(--paper); }
+.presets .chip__n { padding: 1px 8px; border-radius: 999px; font: 800 13px var(--f-body); color: var(--ink); background: var(--c, #bff0dc); }
+.presets .chip:nth-child(1) { --c: #bff0dc; }
+.presets .chip:nth-child(2) { --c: #e3d6ff; }
+.presets .chip:nth-child(3) { --c: #ffe9a8; }
+.presets .chip:nth-child(4) { --c: #cde8ff; }
+.presets .chip[aria-pressed="true"] { background: var(--c); box-shadow: var(--lift-s); }
+.presets .chip[aria-pressed="true"] .chip__n { background: var(--white); }
+.presets .chip[data-zero="1"] { opacity: .55; }
+
+.gridwrap { padding: 14px; background: #f2fbf7; border-radius: 18px; overflow-x: auto; }
+.grid {
+  display: grid; grid-template-columns: 36px repeat(30, minmax(0, 1fr));
+  column-gap: 3px; row-gap: 5px; min-width: 26rem;
+  touch-action: pan-y; user-select: none;
+}
+.grid__corner { grid-row: 1; grid-column: 1; }
+.grid__hour { grid-row: 1; font: 600 11px var(--f-disp); line-height: 1; padding-bottom: 2px; }
+.grid__day { grid-column: 1; display: flex; align-items: center; font: 900 13px var(--f-body); }
+.cell {
+  height: 26px; padding: 0; margin: 0; box-sizing: border-box;
+  background: var(--white); border: 1.5px solid #d8efe6; border-radius: 5px;
+  cursor: crosshair;
+}
+.cell:hover { background: #e3f7ef; }
+.cell[data-on="1"] { background: var(--mint); border-color: var(--ink); }
+.cell[data-on="1"]:hover { background: #2fb795; }
+.grid:focus-within .cell[data-cursor="1"] { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+.step__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+/* Подпись сжимается, кнопка — нет: в строке 532 px они помещались впритык,
+   и полпикселя разницы в шрифте уводили кнопку на вторую строку. */
+.grid__rule { margin: 0; flex: 1 1 0; min-width: 12rem; font-size: 15px; font-weight: 700; }
+.alt:not([open]) { flex: none; }
+.alt summary {
+  display: inline-flex; align-items: center; height: 44px; box-sizing: border-box; padding: 0 14px;
+  border: 2px dashed var(--ink); border-radius: 14px; background: transparent;
+  font-weight: 800; font-size: 14px; list-style: none; cursor: pointer;
+}
+.alt summary::-webkit-details-marker { display: none; }
+.alt summary:hover { background: var(--paper); }
+.alt[open] { flex-basis: 100%; }
+.alt[open] summary { background: var(--paper); }
+.alt__body { padding-top: 14px; display: grid; gap: 10px; }
+.altrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+.altrow select, .altrow input {
+  height: 40px; box-sizing: border-box; padding: 0 10px;
+  border: var(--line) solid var(--ink); border-radius: 12px; background: var(--white);
+  font: 700 14px var(--f-body); color: var(--ink);
+}
+.daypick { display: flex; flex-wrap: wrap; gap: 6px; }
+.daypick button {
+  min-width: 44px; height: 40px; padding: 0 8px;
+  border: var(--line) solid var(--ink); border-radius: 12px; background: var(--white);
+  font: 800 14px var(--f-body); color: var(--ink); cursor: pointer;
+}
+.daypick button[aria-pressed="true"] { background: var(--mint); box-shadow: 2px 2px 0 var(--ink); }
+
+/* ── шаг 3: где ──────────────────────────────────────────────────────────── */
+
+.modes { display: flex; flex-direction: column; gap: 10px; }
+.mode {
+  height: 52px; box-sizing: border-box; padding: 0 16px;
+  display: flex; align-items: center; gap: 12px;
+  background: var(--white); border: var(--line) solid var(--ink); border-radius: 16px;
+  font-weight: 800; font-size: 16px; cursor: pointer;
+}
+.mode input { width: 20px; height: 20px; margin: 0; accent-color: var(--ink); }
+.mode:hover { background: var(--paper); }
+.mode:has(input:checked) { background: #cde8ff; }
+
+.geo { display: flex; flex-direction: column; gap: 10px; }
+.filterbox {
+  width: 100%; height: 44px; box-sizing: border-box; padding: 0 12px;
+  border: var(--line) solid var(--ink); border-radius: 14px; background: var(--white);
+  font: 700 15px var(--f-body); color: var(--ink);
+}
+.geo__list { max-height: 16rem; overflow-y: auto; padding: 4px 10px; border-radius: 14px; background: var(--paper); }
+.geo__line { display: flex; align-items: center; gap: 6px; padding: 10px 0 4px; font: 700 12px var(--f-disp); }
+.geo__dot { width: 10px; height: 10px; border-radius: 50%; flex: none; border: 1.5px solid var(--ink); }
+.opt { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 14px; font-weight: 700; cursor: pointer; }
+.opt input { width: 18px; height: 18px; margin: 0; accent-color: var(--ink); }
+.opt__n { margin-left: auto; font: 600 12px var(--f-disp); }
+.opt[data-zero="1"] { opacity: .5; }
+.geo .field { margin: 0; gap: 6px; font-size: 14px; font-weight: 700; }
+.geo__msg { margin: 0; font-size: 14px; font-weight: 700; }
+.geo__msg:empty { display: none; }
+
+.step__tip {
+  margin: auto 0 0; padding: 16px;
+  display: flex; align-items: center; gap: 12px;
+  background: var(--paper); border-radius: 18px;
+  font-size: 14px; font-weight: 700; line-height: 1.4;
+}
+.step__tip svg { flex: none; width: 36px; height: 36px; color: var(--ink); }
+
+/* ── направления в шторке ────────────────────────────────────────────────── */
+
+.dirs { border: 0; margin: 0 0 16px; padding: 0; min-inline-size: 0; }
+.dirs legend { padding: 0; margin-bottom: 10px; font: 700 16px var(--f-disp); }
+.dirs__list { display: flex; flex-wrap: wrap; gap: 8px; }
+.dirs .chip {
+  height: 40px; box-sizing: border-box; padding: 0 12px;
+  display: inline-flex; align-items: center; gap: 7px;
+  border-radius: 999px; background: var(--white); border: var(--line) solid var(--ink);
+  font: 800 14px var(--f-body); color: var(--ink); cursor: pointer;
+}
+.dirs .chip .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--d-chip); border: 1.5px solid var(--ink); box-shadow: none; }
+.dirs .chip__n { font: 600 12px var(--f-disp); }
+.dirs .chip[aria-pressed="true"] { background: var(--d-wash); box-shadow: var(--lift-s); }
+.dirs .chip[data-zero="1"] { opacity: .5; }
+
+/* ── ширины между эталоном и шторкой ─────────────────────────────────────── */
+
+/* Уже 1360 средняя колонка сжимает сетку недели до ячеек меньше 11 px.
+   Тогда шаги 1 и 2 рядом, шаг 3 — под ними во всю ширину: порядок цел. */
+@media (max-width: 1359px) {
+  .steps { grid-template-columns: 320px minmax(0, 1fr); }
+  .step--where { grid-column: 1 / -1; }
+  .step--where .modes { display: grid; grid-template-columns: repeat(4, minmax(0, max-content)); }
+  .step--where .step__tip { margin-top: 0; align-self: flex-start; }
+}
+
+/* ── шторка: телефон и планшет ───────────────────────────────────────────── */
+
+@media (max-width: 63.99rem) {
+  .podbor { padding-top: 0; gap: 0; }
+  .podbor__t, .podbor::before, .podbor::after, .podbor__star { display: none; }
+
+  .builder[data-sheet="closed"] { display: none; }
+  .builder[data-sheet="open"] {
+    position: fixed; inset: auto 0 0 0; z-index: 40;
+    max-height: 90dvh; overflow-y: auto; overscroll-behavior: contain;
+    background: var(--white);
+    border: var(--line) solid var(--ink); border-bottom: 0; border-radius: 28px 28px 0 0;
+    padding: 0 var(--edge-x);
+    animation: sheet-up .2s ease-out;
+  }
+  .builder__head {
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 2;
+    margin: 0 calc(var(--edge-x) * -1) 16px; padding: 16px var(--edge-x) 12px;
+    background: var(--white); border-bottom: 2px dashed #e2d8c8;
+  }
+  .builder__title { margin: 0; font: 700 22px var(--f-disp); }
+  .sheet-close {
+    margin-left: auto; height: 40px; padding: 0 14px;
+    border: var(--line) solid var(--ink); border-radius: 999px; background: var(--white);
+    font: 800 14px var(--f-body); color: var(--ink); cursor: pointer;
+  }
+  .dirs { display: block; }
+
+  .steps { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .step { padding: 20px; gap: 16px; box-shadow: var(--lift-m); border-radius: 24px; }
+  .step--where .modes { display: flex; }
+  .step__tip { margin-top: 0; }
+
+  .sheet-apply {
+    display: block; position: sticky; bottom: 0; z-index: 3;
+    margin: 16px calc(var(--edge-x) * -1) 0;
+    padding: 10px var(--edge-x) calc(10px + env(safe-area-inset-bottom));
+    background: var(--white); border-top: 2px dashed #e2d8c8;
+  }
+  .sheet-apply .btn {
+    width: 100%; height: 56px; border-radius: 20px;
+    font: 900 18px var(--f-body); box-shadow: var(--lift-l);
+  }
+}
+@keyframes sheet-up { from { transform: translateY(12%); } to { transform: none; } }
+
+/* Ниже 768 px сетки нет: ячейка шириной в 10 px пальцем не нажимается.
+   Остаётся список «дни + с какого часа до какого» — он правит ту же маску
+   и заодно служит текстовой заменой сетки для скринридера. */
+@media (max-width: 47.99rem) {
+  .gridwrap, .grid__rule { display: none; }
+  .alt summary { display: none; }
+  .alt__body { padding-top: 0; }
+  .step__foot { display: block; }
+}

@@ -78,32 +78,40 @@
   <div class="dtiles" id="tiles" role="group" aria-labelledby="dirs-t"></div>
 </section>
 
-<section id="podbor" class="wrap">
+<section id="podbor" class="podbor shell" aria-labelledby="podbor-t">
+  <h2 class="sec-head__t podbor__t" id="podbor-t">Подберём за три шага</h2>
+  <svg class="podbor__star" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 12l6-10 6 10-10-6h8z"/></svg>
 
+  <!-- На телефоне весь подбор — шторка: закрыта, пока её не открыли
+       кнопкой героя или полосой «Фильтры». -->
   <form class="builder" id="builder" data-sheet="closed">
 
     <div class="builder__head">
-      <h2 class="builder__title">Поиск</h2>
+      <h2 class="builder__title">Подбор</h2>
       <button type="button" class="sheet-close" id="sheet-close">Свернуть</button>
     </div>
 
+    <!-- Направления внутри шторки: на широком экране их роль у плиток. -->
     <fieldset class="dirs">
       <legend>Направление</legend>
       <div class="dirs__list" id="dirs"></div>
     </fieldset>
 
-    <div class="panels">
+    <div class="steps">
 
-      <section class="panel panel--who" aria-labelledby="who-t">
-        <h3 class="panel__t" id="who-t">Кому</h3>
-        <div class="kids" id="kids"></div>
-        <div class="nothing-here" id="no-kids"></div>
-        <button type="button" class="btn btn--add" id="add-kid">Добавить ребёнка</button>
-        <p class="panel__hint" id="who-hint">Подходит, если возраст попадает в диапазон группы. Группы, где ребёнок младше или старше на год, показываем отдельно.</p>
+      <section class="step step--who" aria-labelledby="who-t">
+        <div class="step__head"><span class="step__n" aria-hidden="true">1</span><h3 class="step__t" id="who-t">Кому</h3></div>
+        <div class="kidbox">
+          <div class="kids" id="kids"></div>
+          <div class="agescale" id="no-kids" aria-hidden="true"></div>
+        </div>
+        <p class="step__text" id="who-empty">Скажите, сколько лет ребёнку, — и в каждой карточке будет видно, сколько лет он ещё проходит в этой группе.</p>
+        <p class="step__text" id="who-hint">Подходит, если возраст попадает в диапазон группы. Группы, где ребёнок младше или старше на год, показываем отдельно.</p>
+        <button type="button" class="step__btn" id="add-kid">Указать возраст</button>
       </section>
 
-      <section class="panel panel--when" aria-labelledby="when-t">
-        <h3 class="panel__t" id="when-t">Когда удобно возить</h3>
+      <section class="step step--when" aria-labelledby="when-t">
+        <div class="step__head"><span class="step__n" aria-hidden="true">2</span><h3 class="step__t" id="when-t">Когда удобно возить</h3></div>
 
         <div class="presets" id="presets"></div>
 
@@ -111,18 +119,19 @@
           <div class="grid" id="grid"></div>
         </div>
 
-        <p class="grid__rule">Занятие подходит, только если целиком помещается в закрашенное окно.</p>
-
-        <details class="alt" id="alt">
-          <summary>Задать окна списком</summary>
-          <div class="alt__body" id="alt-body"></div>
-        </details>
+        <div class="step__foot">
+          <p class="grid__rule">Закрасьте окна — подойдут занятия, которые целиком в них помещаются.</p>
+          <details class="alt" id="alt">
+            <summary>Задать списком</summary>
+            <div class="alt__body" id="alt-body"></div>
+          </details>
+        </div>
 
         <p class="sr-only" id="win-text" aria-live="polite"></p>
       </section>
 
-      <section class="panel panel--where" aria-labelledby="where-t">
-        <h3 class="panel__t" id="where-t">Где</h3>
+      <section class="step step--where" aria-labelledby="where-t">
+        <div class="step__head"><span class="step__n" aria-hidden="true">3</span><h3 class="step__t" id="where-t">Где</h3></div>
 
         <div class="modes" role="radiogroup" aria-labelledby="where-t" id="modes">
           <label class="mode"><input type="radio" name="geo" value="off" checked> Весь город</label>
@@ -141,10 +150,10 @@
         </div>
 
         <div class="geo" id="geo-near" hidden>
-          <button type="button" class="btn" id="locate">Определить моё место</button>
+          <button type="button" class="step__btn step__btn--light" id="locate">Определить моё место</button>
           <label class="field">
             <span>Или адрес, станция, ориентир</span>
-            <input type="search" id="place" list="places" autocomplete="off" placeholder="Например, Чкаловская">
+            <input type="search" class="filterbox" id="place" list="places" autocomplete="off" placeholder="Например, Чкаловская">
           </label>
           <datalist id="places"></datalist>
           <label class="field field--radius">
@@ -154,10 +163,9 @@
           <p class="geo__msg" id="geo-msg" role="status"></p>
         </div>
 
-        <p class="panel__hint">
-          <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-          Расстояние считаем по прямой и так и подписываем: «1,2 км по прямой». Про время в пути не обещаем ничего.
+        <p class="step__tip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z" fill="#ffc93c"/><circle cx="12" cy="10" r="2.5" fill="#fff"/></svg>
+          <span>Расстояние считаем по прямой и так и пишем: «1,2 км по прямой». Время в пути не обещаем.</span>
         </p>
       </section>
 
@@ -167,7 +175,6 @@
       <button type="button" class="btn" id="apply-filters">Показать <span class="num" id="apply-count"></span></button>
     </div>
   </form>
-
 </section>
 
 <section id="gruppy" class="wrap">

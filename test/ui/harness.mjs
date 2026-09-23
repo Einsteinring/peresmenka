@@ -257,7 +257,7 @@ async function openPage(port, url, { width, height, mobile }) {
     },
 
     async key(key, { ctrl = false, shift = false } = {}) {
-      const codes = { Tab: 9, Enter: 13, Escape: 27, a: 65 };
+      const codes = { Tab: 9, Enter: 13, Escape: 27, a: 65, ArrowLeft: 37, ArrowRight: 39 };
       const modifiers = (ctrl ? 2 : 0) | (shift ? 8 : 0);
       const base = { key, code: key.length === 1 ? `Key${key.toUpperCase()}` : key, windowsVirtualKeyCode: codes[key] || 0, modifiers };
       await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', ...base });
@@ -270,9 +270,14 @@ async function openPage(port, url, { width, height, mobile }) {
     // Нужен сборке design/compare.html, сценарии им не пользуются.
     async shot(y, height, width) {
       await page.eval('document.fonts.ready.then(() => true)');
+      // Режим «за пределами экрана» временно растягивает вьюпорт на весь
+      // документ, и вёрстка, зависящая от высоты окна, снимается не такой,
+      // как на экране. Поэтому он включается, только если полоса не влезает.
+      const inView = await page.eval(`scrollY <= ${y} && ${y + height} <= scrollY + innerHeight`);
+      const top = inView ? y - (await page.eval('scrollY')) : y;
       const r = await send('Page.captureScreenshot', {
-        format: 'png', captureBeyondViewport: true,
-        clip: { x: 0, y, width, height, scale: 1 }
+        format: 'png', captureBeyondViewport: !inView,
+        clip: { x: 0, y: inView ? top : y, width, height, scale: 1 }
       });
       return Buffer.from(r.data, 'base64');
     },

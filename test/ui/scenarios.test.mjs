@@ -374,3 +374,14 @@ test('демо: сохранённый поиск и отслеживание в
   noErrors(page);
   await page.close();
 });
+
+test('ползунок возраста: стрелками меняет возраст, поле и адрес следуют', async () => {
+  const page = await open('/?kids=8');
+  await page.click(labelled('^Возраст ребёнка 1, ползунок$'), 'ползунок возраста');
+  await page.key('ArrowRight');
+  await page.key('ArrowRight');
+  await page.waitFor(`new URLSearchParams(location.search).get('kids') === '10'`, { what: 'kids=10 в адресе' });
+  assert.equal(await page.eval(`__ui.label('^Возраст ребёнка 1$').value`), '10', 'поле с числом отстало от ползунка');
+  noErrors(page);
+  await page.close();
+});

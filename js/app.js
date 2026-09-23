@@ -441,7 +441,7 @@ function syncControls() {
     const name = document.createElement('input');
     name.type = 'text';
     name.className = 'kid__name';
-    name.placeholder = 'Имя, необязательно';
+    name.placeholder = 'Имя';
     name.value = child.name || '';
     name.setAttribute('aria-label', `Имя ребёнка ${i + 1}`);
     name.addEventListener('change', () => {
@@ -456,19 +456,50 @@ function syncControls() {
     drop.setAttribute('aria-label', `Убрать ребёнка ${i + 1}`);
     drop.addEventListener('click', () => apply({ children: q.children.filter((_, j) => j !== i) }));
 
-    row.append(age, name, drop);
+    // Ползунок из эталона — настоящий: 3–17, как шкала на подложке. Поле
+    // с числом остаётся рядом — возраст можно напечатать, и 2 или 18 тоже.
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.className = 'kid__slider';
+    slider.min = '3';
+    slider.max = '17';
+    slider.value = String(Math.min(17, Math.max(3, child.age)));
+    slider.setAttribute('aria-label', `Возраст ребёнка ${i + 1}, ползунок`);
+    const paintSlider = () => slider.style.setProperty('--p', `${((slider.value - 3) / 14) * 100}%`);
+    paintSlider();
+    slider.addEventListener('input', () => {
+      age.value = slider.value;
+      paintSlider();
+    });
+    slider.addEventListener('change', () => {
+      const next = q.children.map((c, j) => (j === i ? { ...c, age: Number(slider.value) } : c));
+      apply({ children: next });
+    });
+
+    const ageBox = document.createElement('label');
+    ageBox.className = 'kid__agebox';
+    ageBox.append(age, document.createTextNode(' лет'));
+
+    const line = document.createElement('div');
+    line.className = 'kid__line';
+    line.append(ageBox, name, drop);
+    row.append(slider, line);
     kids.append(row);
   });
   $('add-kid').hidden = q.children.length >= 4;
   $('add-kid').textContent = q.children.length ? 'Добавить ещё ребёнка' : 'Указать возраст';
 
+  // Пока детей нет, на розовой подложке — шкала возраста, как в эталоне:
+  // она показывает, что здесь будет ползунок. Это рисунок, а не контрол.
   const noKids = $('no-kids');
   const empty = q.children.length === 0;
   noKids.hidden = !empty;
+  $('who-empty').hidden = !empty;
   $('who-hint').hidden = empty;
   if (empty && !noKids.dataset.filled) {
     noKids.dataset.filled = '1';
-    noKids.innerHTML = `${emptyArt('age')}<p>Возраст не задан. Укажите, сколько лет ребёнку, — и в каждой карточке будет видно, сколько лет он ещё проходит в этой группе.</p>`;
+    noKids.innerHTML = '<span class="agescale__track"><span class="agescale__knob"></span></span>' +
+      `<span class="agescale__marks">${[3, 5, 7, 9, 11, 13, 15, 17].map((n) => `<span>${n}</span>`).join('')}</span>`;
   }
 
   // режимы географии

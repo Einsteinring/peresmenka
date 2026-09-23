@@ -11,6 +11,10 @@
     "tiles": {
       "file": "ref-tiles.png",
       "height": 273
+    },
+    "steps": {
+      "file": "ref-steps.png",
+      "height": 704
     }
   },
   "mineShots": {
@@ -25,6 +29,10 @@
     "tiles": {
       "file": "site-tiles.png",
       "height": 273
+    },
+    "steps": {
+      "file": "site-steps.png",
+      "height": 713
     }
   },
   "phones": [

@@ -163,8 +163,9 @@ body { position: relative; overflow-x: clip; }
   transition: transform .08s ease-out, box-shadow .08s ease-out;
 }
 .cta--go { padding: 0 30px; background: var(--coral); box-shadow: var(--lift-l); font-weight: 900; font-size: 19px; }
-/* Зазор у флекса нельзя: текст вокруг числа во «Все 310 групп» стал бы
-   отдельными элементами и разъехался. Отступ получает только стрелка. */
+/* Подпись кнопки — один элемент. Голый текст внутри флекса становится
+   отдельными элементами: зазор между ними даёт двойной пробел, а без
+   зазора флекс срезает пробел на краю и «Все» слипается с числом. */
 .cta svg { width: 22px; height: 22px; margin-left: 10px; }
 .cta:hover { color: var(--ink); background: var(--paper); }
 .cta--go:hover { background: #ff7d60; }

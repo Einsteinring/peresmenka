@@ -133,7 +133,7 @@ export function groupCard(item, opts = {}) {
   </p>
 
   ${opts.compare === false ? '' : `<div class="card__actions">
-    <a class="btn btn--quiet" href="${groupUrl(g)}">Подробно и запись</a>
+    <a class="btn" href="${groupUrl(g)}">Подробно и запись</a>
     <button type="button" class="follow" data-follow="${g.id}" aria-pressed="false">Отслеживать</button>
     <label class="cmp"><input type="checkbox" class="cmp__box" value="${g.id}"${opts.compared ? ' checked' : ''}> Сравнить</label>
   </div>`}

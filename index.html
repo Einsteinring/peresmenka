@@ -7,10 +7,10 @@
 <meta name="description" content="Поиск детских кружков Петербурга по возрасту ребёнка, свободному окну в расписании и дороге от дома. Демонстрационный каталог.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://peresmenka.vercel.app/">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='5' fill='%2313202A'/%3E%3Crect x='6' y='13' width='13' height='6' rx='1' fill='%239FC6E8'/%3E%3Crect x='21' y='13' width='5' height='6' rx='1' fill='%2352626E'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232A1E4A'/%3E%3Crect x='6' y='13' width='13' height='6' rx='3' fill='%23FF5A3C'/%3E%3Crect x='21' y='13' width='5' height='6' rx='2.5' fill='%23FFC93C'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;500;600&family=Onest:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Nunito:wght@400;700;800;900&display=swap">
 <link rel="stylesheet" href="/css/app.css">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Пересменка","url":"https://peresmenka.vercel.app/","description":"Поиск детских кружков Петербурга по возрасту, окну в расписании и дороге от дома. Демонстрационный каталог."}</script>
 </head>
@@ -28,8 +28,33 @@
 
 <main class="wrap">
 
-  <h1 class="lede">Кружок между работой и школой</h1>
-  <p class="sub">Три вещи решают всё: возраст ребёнка, окно в вашем расписании и дорога. Задайте их — список пересчитается сразу.</p>
+  <div class="hero">
+    <div class="hero__text">
+      <h1 class="lede"><em>Кружок</em> между работой и школой</h1>
+      <p class="sub">Три вещи решают всё: возраст ребёнка, окно в вашем расписании и дорога. Задайте их — список пересчитается сразу.</p>
+    </div>
+
+    <div class="hero__art" aria-hidden="true">
+      <svg viewBox="0 0 400 340" fill="none" stroke="#2a1e4a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="236" cy="150" r="96" fill="#ffc93c"/>
+        <rect x="24" y="52" width="132" height="132" rx="34" fill="#3dc9a6"/>
+        <rect x="66" y="92" width="48" height="38" rx="10" fill="#fff8ec"/>
+        <circle cx="80" cy="111" r="4.5" fill="#2a1e4a" stroke="none"/>
+        <circle cx="100" cy="111" r="4.5" fill="#2a1e4a" stroke="none"/>
+        <path d="M90 92V76M78 142h24"/>
+        <circle cx="90" cy="72" r="5"/>
+        <rect x="36" y="196" width="130" height="92" rx="40" fill="#5ab0ff"/>
+        <path d="M62 226c10-8 20-8 30 0s20 8 30 0M62 254c10-8 20-8 30 0s20 8 30 0"/>
+        <circle cx="288" cy="248" r="66" fill="#ff8fb8"/>
+        <circle cx="272" cy="268" r="13" fill="#fff8ec"/>
+        <circle cx="308" cy="258" r="13" fill="#fff8ec"/>
+        <path d="M285 266V216l36-10v50"/>
+        <path d="M352 36l7 16 17 2-12 12 3 17-15-8-15 8 3-17-12-12 17-2z" fill="#b08cff"/>
+        <path d="M330 314c8-10 16 10 24 0s16 10 24 0" stroke="#ff5a3c"/>
+        <circle cx="16" cy="300" r="9" fill="#a6d94a"/>
+      </svg>
+    </div>
+  </div>
 
   <fieldset class="tiles" id="tiles">
     <legend>С чего начать</legend>
@@ -175,7 +200,24 @@
 </dialog>
 
 <footer class="foot">
-  <p>Демонстрационный проект. Данные вымышлены, записаться на самом деле нельзя.</p>
+  <div class="foot__in">
+    <div>
+      <p class="foot__mark">Пересменка</p>
+      <p>Кружки и секции для детей в Петербурге. Демонстрационный проект: данные вымышлены,
+        записаться на самом деле нельзя.</p>
+    </div>
+    <ul class="foot__dirs">
+    <li><a href="/robototehnika/">Робототехника</a></li>
+    <li><a href="/plavanie/">Плавание</a></li>
+    <li><a href="/muzyka/">Музыка</a></li>
+    <li><a href="/yazyki/">Языки</a></li>
+    <li><a href="/shahmaty/">Шахматы</a></li>
+    <li><a href="/risovanie/">Рисование</a></li>
+    <li><a href="/edinoborstva/">Единоборства</a></li>
+    <li><a href="/tancy/">Танцы</a></li>
+    <li><a href="/teatr/">Театр</a></li>
+    </ul>
+  </div>
 </footer>
 
 <script type="module" src="/js/app.js"></script>

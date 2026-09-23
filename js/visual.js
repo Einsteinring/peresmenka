@@ -4,12 +4,14 @@
 //
 // Цветов здесь нет намеренно. Палитра девяти направлений живёт в одном
 // месте — в css/app.css под [data-dir="…"], а разметка берёт её через
-// var(--d-ink) и var(--d-wash). Так цвет невозможно рассинхронизировать
+// var(--d-chip) и var(--d-wash). Так цвет невозможно рассинхронизировать
 // между поиском и статикой.
 //
-// Ограничение всего набора пиктограмм: сетка 24×24, обводка 1,75,
+// Ограничение всего набора пиктограмм: сетка 24×24, обводка 2,
 // только горизонтали, вертикали, диагонали под 45° и окружности.
 // Дуга на девять знаков ровно одна — у танцев, где она значит движение.
+// Пиктограмма всегда лежит в насыщенном кружке своего направления,
+// поэтому рисуется чернилами через currentColor, а не цветом.
 
 /* ── пиктограммы ─────────────────────────────────────────────────────────── */
 
@@ -70,15 +72,18 @@ export const DIRECTION_IDS = Object.keys(ICONS);
 export function dirIcon(dirId, size = 24, extraClass = '') {
   const body = ICONS[dirId];
   if (!body) return '';
-  return `<svg class="ic${extraClass ? ` ${extraClass}` : ''}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${body}</svg>`;
+  return `<svg class="ic${extraClass ? ` ${extraClass}` : ''}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${body}</svg>`;
 }
 
 /* ── обложки ─────────────────────────────────────────────────────────────── */
 
-// Случайная маска даёт шум, поэтому клетка закрашивается не броском монеты,
-// а арифметическим правилом: (a·c + b·r) mod m < t. Такое поле всегда
-// структурно — выходят диагонали, шахматка, разреженная решётка, муар,
-// но никогда каша.
+// Обложка выводится из id группы, а не из случайности: у 310 групп 310 разных
+// обложек, и при пересборке каталога они не перетасовываются.
+//
+// Рисунок — несколько мягких пятен, наползающих друг на друга и обрезанных
+// краем. Пятно строится по кольцу точек со смещёнными радиусами и замыкается
+// квадратичными кривыми через середины рёбер: получается замкнутая клякса
+// без углов и без единой прямой.
 
 function hash32(text) {
   let h = 0x811c9dc5;
@@ -89,96 +94,67 @@ function hash32(text) {
   return h >>> 0;
 }
 
-// Фигура своего направления попадается чаще: обложка перекликается
-// с пиктограммой, но не повторяет её.
-const FAVOURITE = {
-  robototehnika: 'square',
-  plavanie: 'circle',
-  muzyka: 'circle',
-  yazyki: 'bar',
-  shahmaty: 'square',
-  risovanie: 'triangle',
-  edinoborstva: 'bar',
-  tancy: 'ring',
-  teatr: 'triangle'
-};
-
-const SHAPES = ['circle', 'square', 'bar', 'triangle', 'ring'];
-
-// Сетка задаётся размером клетки, а не числом колонок: одна и та же обложка
-// должна одинаково читаться и на узкой полосе карточки 88×240, и на широкой
-// ленте страницы группы 960×120. Раньше числа рядов и колонок брались из
-// хэша напрямую — и на ленте 8:1 клетки растягивались в пустые прямоугольники.
-function coverPlan(group, width, height) {
-  const h = hash32(`${group.id}:${group.slug || ''}`);
-  const pick = (shift, mod) => (h >>> shift) % mod;
-
-  const inner = { w: width * 0.72, h: height * 0.84 };
-  const cell = 17 + pick(0, 4) * 6;
-  let cols = Math.max(3, Math.round(inner.w / cell));
-  let rows = Math.max(2, Math.round(inner.h / cell));
-  while (rows * cols > 240) { cols = Math.max(3, cols - 1); rows = Math.max(2, rows - 1); }
-
-  const shape = pick(6, 3) === 0 ? SHAPES[pick(8, SHAPES.length)] : FAVOURITE[group.direction] || 'circle';
-  const a = 1 + pick(11, 4);
-  const b = 1 + pick(14, 4);
-  const m = 3 + pick(17, 5);
-  let t = 1 + (h >>> 21) % Math.max(1, m - 1);
-  // Совсем редкая решётка читается как пустое место, поэтому поднимаем
-  // порог, пока фигур не наберётся хотя бы шесть.
-  while (t < m - 1 && (rows * cols * t) / m < 6) t++;
-  const tones = pick(24, 2) === 0 ? [0.16, 0.32] : [0.14, 0.28, 0.5];
-  const focus = (h >>> 26) % (rows * cols);
-  return { rows, cols, shape, a, b, m, t, tones, focus };
+// xorshift32: тот же id — та же последовательность, на любом движке.
+function seeded(seed) {
+  let x = seed || 1;
+  return () => {
+    x ^= x << 13; x >>>= 0;
+    x ^= x >>> 17;
+    x ^= x << 5; x >>>= 0;
+    return x / 4294967296;
+  };
 }
 
-function shapeMarkup(shape, cx, cy, unit, opacity) {
-  const o = opacity.toFixed(2);
-  switch (shape) {
-    case 'square': {
-      const s = unit * 1.05;
-      return `<rect x="${(cx - s / 2).toFixed(1)}" y="${(cy - s / 2).toFixed(1)}" width="${s.toFixed(1)}" height="${s.toFixed(1)}" opacity="${o}"/>`;
-    }
-    case 'bar': {
-      const w = unit * 1.7;
-      const hgt = unit * 0.5;
-      return `<rect x="${(cx - w / 2).toFixed(1)}" y="${(cy - hgt / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${hgt.toFixed(1)}" opacity="${o}"/>`;
-    }
-    case 'triangle': {
-      const s = unit * 1.15;
-      return `<path d="M${cx.toFixed(1)} ${(cy - s).toFixed(1)}L${(cx + s).toFixed(1)} ${(cy + s * 0.7).toFixed(1)}H${(cx - s).toFixed(1)}Z" opacity="${o}"/>`;
-    }
-    case 'ring':
-      return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(unit * 0.78).toFixed(1)}" fill="none" stroke="var(--d-ink)" stroke-width="${(unit * 0.34).toFixed(2)}" opacity="${o}"/>`;
-    default:
-      return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(unit * 0.62).toFixed(1)}" opacity="${o}"/>`;
+function blobPath(cx, cy, r, rnd, points = 7) {
+  const pts = [];
+  for (let i = 0; i < points; i++) {
+    const a = (i / points) * Math.PI * 2;
+    const rr = r * (0.68 + rnd() * 0.56);
+    pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]);
   }
+  const mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+  const f = (n) => n.toFixed(1);
+
+  let [mx, my] = mid(pts[points - 1], pts[0]);
+  let d = `M${f(mx)} ${f(my)}`;
+  for (let i = 0; i < points; i++) {
+    const cur = pts[i];
+    [mx, my] = mid(cur, pts[(i + 1) % points]);
+    d += `Q${f(cur[0])} ${f(cur[1])} ${f(mx)} ${f(my)}`;
+  }
+  return d + 'Z';
 }
 
+// Пятна раскладываются вдоль длинной стороны, а их число выводится из
+// пропорции: одна и та же обложка должна читаться и на полосе карточки
+// 88×240, и на ленте страницы группы 960×120.
 export function coverSvg(group, width = 88, height = 240) {
-  const p = coverPlan(group, width, height);
-  const padX = width * 0.14;
-  const padY = height * 0.08;
-  const stepX = (width - padX * 2) / p.cols;
-  const stepY = (height - padY * 2) / p.rows;
-  const unit = Math.min(stepX, stepY) * 0.42;
+  const rnd = seeded(hash32(`${group.id}:${group.slug || ''}`));
+  const vertical = height >= width;
+  const long = vertical ? height : width;
+  const short = vertical ? width : height;
+  const count = Math.min(7, Math.max(3, Math.round(long / short / 1.2)));
 
-  const marks = [];
-  for (let r = 0; r < p.rows; r++) {
-    for (let c = 0; c < p.cols; c++) {
-      const i = r * p.cols + c;
-      const on = (p.a * c + p.b * r) % p.m < p.t;
-      if (!on && i !== p.focus) continue;
-      const cx = padX + stepX * (c + 0.5);
-      const cy = padY + stepY * (r + 0.5);
-      const opacity = i === p.focus ? 0.9 : p.tones[(c + r) % p.tones.length];
-      marks.push(shapeMarkup(p.shape, cx, cy, unit, opacity));
-    }
+  const tones = [
+    ['var(--surface)', 0.55],
+    ['var(--d-chip)', 0.38],
+    ['var(--d-chip)', 0.2],
+    ['var(--surface)', 0.32]
+  ];
+
+  const blobs = [];
+  for (let i = 0; i < count; i++) {
+    const along = ((i + 0.5) / count + (rnd() - 0.5) * 0.24) * long;
+    const across = (0.22 + rnd() * 0.56) * short;
+    const r = short * (0.42 + rnd() * 0.44);
+    const [fill, opacity] = tones[i % tones.length];
+    const d = blobPath(vertical ? across : along, vertical ? along : across, r, rnd);
+    blobs.push(`<path d="${d}" fill="${fill}" opacity="${opacity}"/>`);
   }
 
   return `<svg class="cover__svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">` +
     `<rect width="${width}" height="${height}" fill="var(--d-wash)"/>` +
-    `<g fill="var(--d-ink)">${marks.join('')}</g>` +
+    blobs.join('') +
     '</svg>';
 }
 

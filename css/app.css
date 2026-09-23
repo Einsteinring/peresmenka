@@ -1,34 +1,56 @@
 /* Пересменка
-   Тёплая бумага, чернила вместо цвета — и цвет, который принадлежит
-   содержанию, а не интерфейсу: девять направлений это девять материалов.
-   Интерфейс остаётся бесцветным, кроме двух служебных акцентов, и оба
-   про время: синий — окно, которое задал родитель, янтарный — то, что
-   поджимает. Больше янтарный не значит ничего.
+   Наклейка, а не бумага. Один приём держит весь сайт: у всего, что можно
+   нажать или что лежит поверх фона, обводка в два пикселя чернилами и
+   жёсткая тень со смещением — без размытия, как у переводной картинки.
+   Радиус при этом кодирует роль: карточка 28, плитка 22, кнопка 14,
+   пилюля 999. По одному только скруглению видно, что перед тобой.
 
-   Где цвет направления работает: плитка, обложка карточки, точка в
-   крошках, заголовок посадочной страницы. Где его нет никогда: кнопки,
-   ссылки, текст, панель результатов, гео-списки, сетка недели. */
+   Цвет по-прежнему принадлежит содержанию: девять направлений — девять
+   пар «пастельная заливка + насыщенный значок». Интерфейсных цветов три,
+   и у каждого одна работа: коралл — действие, бирюза — окно в расписании,
+   золото — время поджимает. Больше золото не значит ничего.
+
+   Единственное движение на сайте — нажатие: элемент уезжает на два
+   пикселя в тень, тень укорачивается. Ничего не выезжает при прокрутке. */
 
 :root {
-  --paper: #ece9e3;
-  --surface: #fcfbf8;
-  --ink: #26211c;
-  --ink-soft: #6b6157;
-  --edge: #d6d0c6;
-  --edge-soft: #e4dfd7;
-  --window: #9fc6e8;
-  --window-soft: #d3e4f2;
-  --window-line: #6fa8d4;
-  --amber: #8f5214;
-  --amber-bright: #c97e28;
-  --amber-soft: #f0e0cb;
+  --paper: #fff8ec;
+  --surface: #ffffff;
+  --ink: #2a1e4a;
+  --ink-soft: #6f6590;
+  --edge: #ded2c4;
+  --edge-soft: #efe4d4;
 
-  --sans: 'Onest', system-ui, sans-serif;
-  --disp: 'Geologica', 'Onest', system-ui, sans-serif;
+  --go: #ff5a3c;
+  --go-deep: #e8462a;
+  --gold: #ffc93c;
+  --lime: #a6d94a;
+
+  --window: #3dc9a6;
+  --window-soft: #cdf1e5;
+  --window-line: #2bab8b;
+  --amber: #8a5c00;
+  --amber-bright: #ffc93c;
+  --amber-soft: #ffe9a8;
+
+  --sans: 'Nunito', system-ui, sans-serif;
+  --disp: 'Unbounded', 'Nunito', system-ui, sans-serif;
 
   --t-micro: 0.6875rem;
   --t-small: 0.8125rem;
   --t-base: 1rem;
+
+  /* Форма. Обводка и тень всегда чернилами: цветных контуров в системе нет,
+     иначе девять палитр направлений начнут спорить с интерфейсом. */
+  --bw: 2px;
+  --r-card: 28px;
+  --r-tile: 22px;
+  --r-btn: 14px;
+  --r-in: 12px;
+  --r-pill: 999px;
+  --sh-s: 3px 3px 0 var(--ink);
+  --sh-m: 4px 4px 0 var(--ink);
+  --sh-l: 6px 6px 0 var(--ink);
 
   --gut: 1rem;
   --max: 78rem;
@@ -58,16 +80,32 @@ body {
   overflow-wrap: break-word;
 }
 
-h1, h2, h3, .num, .mark { font-family: var(--disp); }
+h1, h2, h3, .num, .mark { font-family: var(--disp); font-weight: 700; letter-spacing: -0.01em; line-height: 1.12; }
 .num, dd.num, .lesson__time, output { font-feature-settings: 'tnum' 1; font-variant-numeric: tabular-nums; }
 
-a { color: inherit; text-decoration-color: var(--edge); text-underline-offset: 2px; }
+a { color: inherit; text-decoration-color: var(--go); text-decoration-thickness: 2px; text-underline-offset: 3px; }
 a:hover { text-decoration-color: currentColor; }
 
+/* Отступ в три пикселя нужен, чтобы кольцо не слипалось с двухпиксельной
+   обводкой, которая тут почти на всём. */
 :focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-  border-radius: 2px;
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── наклейка: один приём на весь сайт ───────────────────────────────────── */
+
+/* Нажатие вдавливает: элемент уезжает в тень, тень укорачивается. Это
+   единственная анимация в проекте, и она отвечает на действие человека,
+   а не происходит сама. */
+.btn, .chip, .tile, .fix__btn, .follow, .daypick button, .mobilebar__btn, .sheet-apply .btn {
+  transition: transform .06s ease-out, box-shadow .06s ease-out;
+}
+.btn:active, .chip:active, .tile:active, .fix__btn:active,
+.follow:active, .daypick button:active, .mobilebar__btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
 }
 
 .sr-only {
@@ -86,31 +124,44 @@ a:hover { text-decoration-color: currentColor; }
 
 /* ── шапка ───────────────────────────────────────────────────────────────── */
 
-.top { border-bottom: 1px solid var(--edge); background: var(--surface); }
+.top { border-bottom: var(--bw) solid var(--ink); background: var(--surface); }
 .top__in {
   max-width: var(--max); margin: 0 auto; padding: .625rem var(--gut);
   display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; align-items: baseline;
 }
-.mark { font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; text-decoration: none; }
+.mark { font-size: 1.125rem; font-weight: 800; letter-spacing: -0.01em; text-decoration: none; }
 .top__demo { margin: 0; font-size: var(--t-small); color: var(--ink-soft); max-width: 62ch; }
 
 /* ── заголовок ───────────────────────────────────────────────────────────── */
 
 .lede {
-  font-size: clamp(1.75rem, 1.15rem + 2.4vw, 2.75rem);
-  font-weight: 600; letter-spacing: -0.022em; line-height: 1.08;
-  margin: 2rem 0 .5rem;
+  font-size: clamp(2rem, 1.1rem + 3.6vw, 3.75rem);
+  font-weight: 800; letter-spacing: -0.03em; line-height: 1.02;
+  margin: 2rem 0 .75rem; max-width: 18ch;
+}
+/* Коралловая заливка по первому слову — так в макете, и это единственное
+   место на сайте, где цвет попадает в текст. */
+.lede em { font-style: normal; color: var(--go); }
+
+/* Рисунок в шапке живёт только там, где для него есть место: ниже 64rem
+   он ничего не объясняет, а первый экран занимает целиком. */
+.hero { display: grid; gap: 1rem; }
+.hero__art { display: none; }
+@media (min-width: 64rem) {
+  .hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: 2rem; }
+  .hero__art { display: block; }
+  .hero__art svg { display: block; width: 100%; height: auto; max-height: 20rem; margin-left: auto; max-width: 25rem; }
+  .lede { margin-top: 2.5rem; }
 }
 .sub { margin: 0 0 1.5rem; max-width: 58ch; color: var(--ink-soft); }
 
 /* ── конструктор ─────────────────────────────────────────────────────────── */
 
 .builder {
-  background: var(--surface);
-  border: 1px solid var(--edge);
-  border-radius: 8px;
-  padding: 1rem;
+  border: 0;
+  padding: 0;
 }
+.builder { background: none; }
 .builder__head { display: none; }
 .builder__title { margin: 0; font-size: 1.125rem; }
 
@@ -123,16 +174,16 @@ a:hover { text-decoration-color: currentColor; }
 
 .chip {
   display: inline-flex; align-items: baseline; gap: .4em;
-  border: 1px solid var(--edge); border-radius: 3px;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-pill);
   background: var(--surface); color: inherit;
-  padding: .3rem .55rem; font: inherit; font-size: var(--t-small);
-  cursor: pointer;
+  padding: .3rem .7rem; font: inherit; font-size: var(--t-small); font-weight: 800;
+  box-shadow: var(--sh-s); cursor: pointer;
 }
-.chip:hover { border-color: var(--ink-soft); }
+.chip:hover { background: var(--paper); }
 .chip__n { font-family: var(--disp); font-variant-numeric: tabular-nums; color: var(--ink-soft); font-size: var(--t-micro); }
 .chip[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .chip[aria-pressed='true'] .chip__n { color: var(--window); }
-.chip[data-zero='1'] { color: var(--ink-soft); border-color: var(--edge-soft); }
+.chip[data-zero='1'] { color: var(--ink-soft); box-shadow: none; opacity: .6; }
 .chip[data-zero='1'] .chip__n { color: var(--ink-soft); }
 
 .panels { display: grid; gap: 1rem; }
@@ -140,12 +191,31 @@ a:hover { text-decoration-color: currentColor; }
   .panels { grid-template-columns: 15rem minmax(0, 1fr) 17rem; gap: 1.25rem; }
 }
 
-.panel { border-top: 1px solid var(--edge-soft); padding-top: .75rem; min-width: 0; }
-@media (min-width: 64rem) {
-  .panel { border-top: 0; border-left: 1px solid var(--edge-soft); padding: 0 0 0 1.25rem; }
-  .panel--who { border-left: 0; padding-left: 0; }
+/* Каждый фильтр — отдельная карточка с номером: их три и задавать их
+   удобнее по порядку, поэтому нумерация тут не украшение, а подсказка. */
+.panel {
+  min-width: 0;
+  background: var(--surface);
+  border: var(--bw) solid var(--ink);
+  border-radius: var(--r-tile);
+  box-shadow: var(--sh-m);
+  padding: 1rem 1.125rem 1.125rem;
 }
-.panel__t { margin: 0 0 .625rem; font-size: var(--t-small); font-weight: 500; color: var(--ink-soft); }
+.panel__t {
+  display: flex; align-items: center; gap: .5rem;
+  margin: 0 0 .75rem; font-family: var(--disp); font-size: .9375rem;
+  font-weight: 700; color: var(--ink); counter-increment: step;
+}
+.panel__t::before {
+  content: counter(step);
+  flex: none; width: 1.75rem; height: 1.75rem; border-radius: var(--r-pill);
+  border: var(--bw) solid var(--ink); background: var(--step, var(--gold));
+  font-size: .8125rem; line-height: 1.5rem; text-align: center;
+}
+.panels { counter-reset: step; }
+.panel--who { --step: #ff8fb8; }
+.panel--when { --step: #3dc9a6; }
+.panel--where { --step: #5ab0ff; }
 .panel__hint { margin: .75rem 0 0; font-size: var(--t-small); color: var(--ink-soft); }
 
 /* дети */
@@ -154,13 +224,14 @@ a:hover { text-decoration-color: currentColor; }
 .kid { display: flex; align-items: center; gap: .5rem; }
 .kid__name {
   flex: 1 1 auto; min-width: 0;
-  border: 1px solid var(--edge); border-radius: 3px; background: var(--surface);
-  padding: .35rem .5rem; font: inherit; font-size: var(--t-small);
+  border: var(--bw) solid var(--ink); border-radius: var(--r-in); background: var(--surface);
+  padding: .4rem .6rem; font: inherit; font-size: var(--t-small); color: var(--ink);
 }
 .kid__age {
-  width: 4.25rem; text-align: center;
-  border: 1px solid var(--edge); border-radius: 3px; background: var(--surface);
-  padding: .35rem .25rem; font-family: var(--disp); font-variant-numeric: tabular-nums;
+  width: 4.5rem; text-align: center;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-in); background: var(--surface);
+  padding: .4rem .25rem; font-family: var(--disp); font-weight: 700;
+  font-variant-numeric: tabular-nums; color: var(--ink);
 }
 .kid__drop {
   border: 0; background: none; color: var(--ink-soft); cursor: pointer;
@@ -170,13 +241,22 @@ a:hover { text-decoration-color: currentColor; }
 
 .btn {
   text-decoration: none;
-  border: 1px solid var(--ink); border-radius: 3px;
-  background: var(--ink); color: var(--paper);
-  padding: .4rem .7rem; font: inherit; font-size: var(--t-small); cursor: pointer;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-btn);
+  background: var(--go); color: var(--ink);
+  box-shadow: var(--sh-s);
+  padding: .5rem .9rem; font: inherit; font-size: var(--t-small); font-weight: 900;
+  cursor: pointer;
 }
-.btn:hover { background: #161210; }
-.btn--quiet { background: var(--surface); color: var(--ink); border-color: var(--edge); }
-.btn--quiet:hover { background: var(--paper); border-color: var(--ink-soft); }
+.btn:hover { background: var(--go-deep); }
+.btn--quiet { background: var(--surface); color: var(--ink); }
+.btn--quiet:hover { background: var(--paper); }
+/* Золото — только «сохранить»: это не действие над каталогом, а закладка. */
+.btn--gold { background: var(--gold); }
+.btn--gold:hover { background: #f0b81f; }
+/* Чернильная кнопка добавляет ребёнка — шаг внутри шага, и коралла тут
+   было бы слишком много. */
+.btn--add { background: var(--ink); color: var(--paper); }
+.btn--add:hover { background: #1d143a; }
 .btn--add { margin-top: .5rem; }
 
 /* пресеты */
@@ -190,7 +270,9 @@ a:hover { text-decoration-color: currentColor; }
 .grid {
   display: grid;
   grid-template-columns: var(--daycol) repeat(30, minmax(14px, 1fr));
-  border: 1px solid var(--edge);
+  border: var(--bw) solid var(--ink);
+  border-radius: var(--r-in);
+  overflow: hidden;
   background: var(--edge-soft);
   gap: 1px;
   min-width: 30rem;
@@ -224,7 +306,7 @@ a:hover { text-decoration-color: currentColor; }
 .cell[data-hour='1'] { box-shadow: inset 1px 0 0 var(--edge-soft); }
 .cell[data-on='1'] { background: var(--window); }
 .cell:hover { background: var(--window-soft); }
-.cell[data-on='1']:hover { background: #8cb9e2; }
+.cell[data-on='1']:hover { background: var(--window-line); }
 .grid:focus-within .cell[data-cursor='1'] { outline: 2px solid var(--ink); outline-offset: -2px; }
 
 .grid__rule { margin: .5rem 0 .625rem; font-size: var(--t-small); color: var(--ink-soft); }
@@ -234,17 +316,18 @@ a:hover { text-decoration-color: currentColor; }
 .alt__body { padding-top: .625rem; display: grid; gap: .625rem; }
 .altrow { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem; font-size: var(--t-small); }
 .altrow select, .altrow input {
-  border: 1px solid var(--edge); border-radius: 3px; background: var(--surface);
-  padding: .3rem .35rem; font: inherit; font-size: var(--t-small);
+  border: var(--bw) solid var(--ink); border-radius: var(--r-in); background: var(--surface);
+  padding: .35rem .45rem; font: inherit; font-size: var(--t-small); font-weight: 700; color: var(--ink);
 }
 .altrow .num { font-family: var(--disp); }
 .daypick { display: flex; flex-wrap: wrap; gap: .25rem; }
 .daypick button {
-  min-width: 2.25rem; padding: .3rem .25rem;
-  border: 1px solid var(--edge); border-radius: 3px; background: var(--surface);
-  font: inherit; font-size: var(--t-small); cursor: pointer;
+  min-width: 2.4rem; padding: .35rem .3rem;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-in); background: var(--surface);
+  box-shadow: var(--sh-s);
+  font: inherit; font-size: var(--t-small); font-weight: 800; cursor: pointer;
 }
-.daypick button[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.daypick button[aria-pressed='true'] { background: var(--window); }
 
 /* ── география ───────────────────────────────────────────────────────────── */
 
@@ -253,8 +336,8 @@ a:hover { text-decoration-color: currentColor; }
 
 .filterbox {
   width: 100%; margin-bottom: .5rem;
-  border: 1px solid var(--edge); border-radius: 3px; background: var(--surface);
-  padding: .35rem .5rem; font: inherit; font-size: var(--t-small);
+  border: var(--bw) solid var(--ink); border-radius: var(--r-in); background: var(--surface);
+  padding: .4rem .6rem; font: inherit; font-size: var(--t-small); color: var(--ink);
 }
 
 .geo__list { max-height: 15rem; overflow-y: auto; border-top: 1px solid var(--edge-soft); }
@@ -276,10 +359,36 @@ a:hover { text-decoration-color: currentColor; }
 
 .field { display: grid; gap: .25rem; font-size: var(--t-small); margin-bottom: .625rem; }
 .field input[type='search'] {
-  border: 1px solid var(--edge); border-radius: 3px; background: var(--surface);
-  padding: .35rem .5rem; font: inherit;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-in); background: var(--surface);
+  padding: .4rem .6rem; font: inherit; color: var(--ink);
 }
 .field--radius input { width: 100%; }
+
+/* Ползунок радиуса. Родной вид тут выпадает из системы, поэтому дорожка
+   и бегунок нарисованы теми же двумя пикселями. */
+input[type='range'] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 1.5rem; background: none; cursor: pointer;
+}
+input[type='range']::-webkit-slider-runnable-track {
+  height: 10px; border: var(--bw) solid var(--ink); border-radius: var(--r-pill);
+  background: var(--window-soft);
+}
+input[type='range']::-moz-range-track {
+  height: 10px; border: var(--bw) solid var(--ink); border-radius: var(--r-pill);
+  background: var(--window-soft);
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 1.25rem; height: 1.25rem; margin-top: -.4375rem;
+  border: var(--bw) solid var(--ink); border-radius: 50%;
+  background: var(--go);
+}
+input[type='range']::-moz-range-thumb {
+  width: 1.25rem; height: 1.25rem;
+  border: var(--bw) solid var(--ink); border-radius: 50%;
+  background: var(--go);
+}
 .geo__msg { margin: .25rem 0 0; font-size: var(--t-small); color: var(--ink-soft); }
 
 /* ── панель результата ───────────────────────────────────────────────────── */
@@ -287,17 +396,17 @@ a:hover { text-decoration-color: currentColor; }
 .bar {
   position: sticky; top: 0; z-index: 20;
   display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem;
-  margin: 1.25rem 0 0; padding: .625rem 0;
+  margin: 1.75rem 0 0; padding: .75rem 0;
   background: var(--paper);
-  border-bottom: 1px solid var(--edge);
+  border-bottom: var(--bw) dashed var(--ink);
 }
-.bar__count { margin: 0; font-family: var(--disp); font-size: 1.125rem; font-weight: 500; }
-.bar__count .num { font-size: 1.5rem; letter-spacing: -0.02em; }
+.bar__count { margin: 0; font-family: var(--disp); font-size: 1rem; font-weight: 700; }
+.bar__count .num { font-size: 2.25rem; letter-spacing: -0.03em; font-weight: 800; }
 .bar__right { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; font-size: var(--t-small); }
 .sortbox, .strictbox { display: flex; align-items: center; gap: .4rem; color: var(--ink-soft); }
 .sortbox select {
-  border: 1px solid var(--edge); border-radius: 3px; background: var(--surface);
-  padding: .25rem .35rem; font: inherit; font-size: var(--t-small); color: var(--ink);
+  border: var(--bw) solid var(--ink); border-radius: var(--r-in); background: var(--surface);
+  padding: .3rem .45rem; font: inherit; font-size: var(--t-small); font-weight: 700; color: var(--ink);
 }
 
 /* ── результаты ──────────────────────────────────────────────────────────── */
@@ -315,23 +424,26 @@ a:hover { text-decoration-color: currentColor; }
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--edge);
-  border-radius: 6px;
-  margin-bottom: .625rem;
+  border: var(--bw) solid var(--ink);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-l);
+  margin-bottom: 1rem;
   display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr);
+  grid-template-columns: 6rem minmax(0, 1fr);
   overflow: hidden;
 }
 .card__cover { grid-row: 1 / -1; position: relative; background: var(--d-wash); }
 .card__cover .cover__svg { display: block; width: 100%; height: 100%; }
 .card__cover .ic {
   position: absolute; top: .625rem; left: .625rem;
-  color: var(--d-ink);
+  width: 2.125rem; height: 2.125rem; padding: .3rem;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-in);
+  background: var(--surface); color: var(--ink);
 }
 .card__body { padding: .875rem 1rem; min-width: 0; }
 
 .card__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .75rem; }
-.card__title { margin: 0; font-size: 1.0625rem; font-weight: 500; letter-spacing: -0.01em; }
+.card__title { margin: 0; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.015em; }
 .card__title a { text-decoration: none; }
 .card__title a:hover { text-decoration: underline; }
 .card__subtype { font-family: var(--sans); font-size: var(--t-small); font-weight: 400; color: var(--ink-soft); }
@@ -366,14 +478,15 @@ a:hover { text-decoration-color: currentColor; }
 .lesson__day { color: var(--ink-soft); }
 .lesson__time { font-family: var(--disp); font-variant-numeric: tabular-nums; }
 .lesson__track {
-  position: relative; display: block; height: 12px;
+  position: relative; display: block; height: 14px;
   background: var(--paper);
-  border: 1px solid var(--edge-soft);
+  border: 1.5px solid var(--ink); border-radius: var(--r-pill);
+  overflow: hidden;
 }
 .lesson__win { position: absolute; top: 0; bottom: 0; background: var(--window-soft); }
-.lesson__bar { position: absolute; top: 2px; bottom: 2px; background: var(--ink-soft); }
+.lesson__bar { position: absolute; top: 2px; bottom: 2px; border-radius: var(--r-pill); background: var(--ink-soft); }
 .lesson--fits .lesson__bar { background: var(--ink); }
-.lesson--misses .lesson__bar { background: var(--amber); }
+.lesson--misses .lesson__bar { background: var(--amber-bright); box-shadow: 0 0 0 1px var(--ink); }
 .lesson__note { grid-column: 3; font-size: var(--t-micro); color: var(--amber); }
 .lesson--misses { align-items: start; }
 .lesson--misses .lesson__day, .lesson--misses .lesson__time { color: var(--ink-soft); }
@@ -391,7 +504,7 @@ a:hover { text-decoration-color: currentColor; }
 .card__facts > div { display: flex; align-items: baseline; gap: .4rem; }
 .card__facts dt { font-size: var(--t-micro); color: var(--ink-soft); }
 .card__facts dd { margin: 0; font-size: var(--t-small); }
-.card__facts dd.num { font-family: var(--disp); font-size: .9375rem; }
+.card__facts dd.num { font-family: var(--disp); font-weight: 700; font-size: .9375rem; }
 .card__facts dd.urgent { color: var(--amber); }
 
 .card__tail {
@@ -409,10 +522,11 @@ a:hover { text-decoration-color: currentColor; }
 /* ── обоих сразу ─────────────────────────────────────────────────────────── */
 
 .tog {
-  background: var(--surface);
-  border: 1px solid var(--ink);
-  border-radius: 6px;
-  padding: .75rem 1rem; margin-bottom: .5rem;
+  background: var(--window-soft);
+  border: var(--bw) solid var(--ink);
+  border-radius: var(--r-tile);
+  box-shadow: var(--sh-m);
+  padding: .875rem 1.125rem; margin-bottom: 1rem;
 }
 .tog__head {
   margin: 0 0 .5rem; font-weight: 500;
@@ -428,20 +542,22 @@ a:hover { text-decoration-color: currentColor; }
 /* ── пусто и подсказки ───────────────────────────────────────────────────── */
 
 .empty {
-  background: var(--surface); border: 1px solid var(--edge); border-radius: 8px;
-  padding: 1.25rem;
+  background: var(--surface); border: var(--bw) solid var(--ink);
+  border-radius: var(--r-card); box-shadow: var(--sh-l);
+  padding: 1.5rem;
 }
-.empty h2 { margin: 0 0 .25rem; font-size: 1.25rem; font-weight: 600; }
+.empty h2 { margin: 0 0 .25rem; font-size: 1.375rem; font-weight: 700; }
 .empty p { margin: 0 0 1rem; color: var(--ink-soft); max-width: 60ch; }
 
 .fix { list-style: none; margin: 0; padding: 0; display: grid; gap: .375rem; }
 .fix__btn {
   width: 100%; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem 1rem;
-  border: 1px solid var(--edge); border-radius: 4px; background: var(--paper);
-  padding: .55rem .75rem; font: inherit; text-align: left; cursor: pointer;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-btn); background: var(--paper);
+  box-shadow: var(--sh-s);
+  padding: .65rem .875rem; font: inherit; text-align: left; cursor: pointer;
 }
-.fix__btn:hover { border-color: var(--ink); background: var(--surface); }
-.fix__count { margin-left: auto; font-family: var(--disp); white-space: nowrap; }
+.fix__btn:hover { background: var(--amber-soft); }
+.fix__count { margin-left: auto; font-family: var(--disp); font-weight: 700; white-space: nowrap; }
 .fix__text { font-size: .9375rem; }
 
 /* ── сравнение ───────────────────────────────────────────────────────────── */
@@ -456,9 +572,9 @@ a:hover { text-decoration-color: currentColor; }
 .cmpbar__txt { margin: 0; font-size: var(--t-small); }
 .cmpbar > div { margin-left: auto; display: flex; gap: .5rem; }
 .cmpbar .btn { border-color: var(--paper); background: var(--paper); color: var(--ink); }
-.cmpbar .btn--quiet { background: transparent; color: var(--paper); border-color: #46545f; }
+.cmpbar .btn--quiet { background: transparent; color: var(--paper); border-color: var(--paper); box-shadow: none; }
 
-.cmpdlg { border: 1px solid var(--ink); border-radius: 8px; padding: 0; max-width: min(64rem, 94vw); width: 100%; }
+.cmpdlg { border: var(--bw) solid var(--ink); border-radius: var(--r-card); padding: 0; max-width: min(64rem, 94vw); width: 100%; background: var(--surface); }
 .cmpdlg::backdrop { background: rgba(19, 32, 42, .45); }
 .cmpdlg__in { padding: 1rem; }
 .cmpdlg__head { display: flex; align-items: baseline; gap: 1rem; margin-bottom: .75rem; }
@@ -474,9 +590,30 @@ a:hover { text-decoration-color: currentColor; }
 /* ── низ ─────────────────────────────────────────────────────────────────── */
 
 .more { display: block; margin: 1rem auto 0; }
-.noscript { background: var(--surface); border: 1px solid var(--edge); border-radius: 6px; padding: 1rem; }
-.foot { border-top: 1px solid var(--edge); padding: 1rem var(--gut); }
-.foot p { max-width: var(--max); margin: 0 auto; font-size: var(--t-small); color: var(--ink-soft); }
+.noscript { background: var(--surface); border: var(--bw) solid var(--ink); border-radius: var(--r-tile); padding: 1rem; }
+/* Волна вместо линии: край страницы обрывается фестонами, а не правилом.
+   Рисуется повтором одного эллипса цвета бумаги поверх тёмного подвала,
+   поэтому не требует ни картинки, ни лишней разметки. */
+.foot {
+  margin-top: 4rem;
+  background: var(--ink); color: var(--paper);
+  padding: 0 var(--gut) 2rem;
+}
+.foot::before {
+  content: ''; display: block; height: 22px;
+  margin: 0 calc(var(--gut) * -1) 2rem;
+  background: radial-gradient(46px 22px at 50% 0, var(--paper) 99%, transparent 100%) repeat-x 0 0 / 92px 22px;
+}
+.foot__in { max-width: var(--max); margin: 0 auto; display: grid; gap: 1.5rem; align-items: start; }
+@media (min-width: 48rem) {
+  .foot__in { grid-template-columns: minmax(0, 1fr) auto; gap: 3rem; }
+}
+.foot__mark { margin: 0 0 .5rem; font-family: var(--disp); font-size: 1.25rem; font-weight: 800; color: var(--gold); }
+.foot p { margin: 0; font-size: var(--t-small); max-width: 46ch; opacity: .85; }
+.foot__dirs { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem 2rem; font-size: var(--t-small); }
+@media (min-width: 30rem) { .foot__dirs { grid-template-columns: repeat(3, auto); } }
+.foot__dirs a { text-decoration-color: var(--gold); }
+.foot__dirs a:hover { color: var(--gold); }
 
 /* ── мобильная шторка ────────────────────────────────────────────────────── */
 
@@ -486,13 +623,14 @@ a:hover { text-decoration-color: currentColor; }
   .mobilebar {
     display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 25;
     padding: .5rem var(--gut) calc(.5rem + env(safe-area-inset-bottom));
-    background: var(--paper); border-top: 1px solid var(--edge);
+    background: var(--paper); border-top: var(--bw) solid var(--ink);
   }
   .mobilebar__btn {
     width: 100%; display: flex; justify-content: space-between; align-items: center;
-    border: 1px solid var(--ink); border-radius: 4px;
-    background: var(--ink); color: var(--paper);
-    padding: .7rem .875rem; font: inherit; cursor: pointer;
+    border: var(--bw) solid var(--ink); border-radius: var(--r-btn);
+    background: var(--go); color: var(--ink);
+    box-shadow: var(--sh-s);
+    padding: .7rem .875rem; font: inherit; font-weight: 900; cursor: pointer;
   }
   .mobilebar__btn .num { font-family: var(--disp); font-variant-numeric: tabular-nums; }
 
@@ -502,8 +640,9 @@ a:hover { text-decoration-color: currentColor; }
   .builder[data-sheet='open'] {
     position: fixed; inset: auto 0 0 0; z-index: 40;
     max-height: 88dvh; overflow-y: auto;
-    border-radius: 10px 10px 0 0;
-    border-width: 1px 0 0;
+    background: var(--surface);
+    border-radius: var(--r-card) var(--r-card) 0 0;
+    border: var(--bw) solid var(--ink); border-bottom: 0;
     padding: 0 var(--gut) 5.5rem;
     animation: sheet .18s ease-out;
   }
@@ -512,7 +651,7 @@ a:hover { text-decoration-color: currentColor; }
     position: sticky; top: 0; z-index: 2;
     margin: 0 calc(var(--gut) * -1) .75rem;
     padding: .875rem var(--gut) .5rem;
-    background: var(--surface); border-bottom: 1px solid var(--edge-soft);
+    background: var(--surface); border-bottom: var(--bw) dashed var(--edge);
   }
   .sheet-close {
     margin-left: auto; border: 0; background: none; color: var(--ink-soft);
@@ -541,9 +680,9 @@ a:hover { text-decoration-color: currentColor; }
     display: block; position: sticky; bottom: 0; z-index: 3;
     margin: 1rem calc(var(--gut) * -1) 0;
     padding: .625rem var(--gut) calc(.625rem + env(safe-area-inset-bottom));
-    background: var(--surface); border-top: 1px solid var(--edge);
+    background: var(--surface); border-top: var(--bw) dashed var(--edge);
   }
-  .sheet-apply .btn { width: 100%; padding: .7rem; font-size: 1rem; }
+  .sheet-apply .btn { width: 100%; padding: .75rem; font-size: 1rem; }
 }
 
 @keyframes sheet { from { transform: translateY(12%); } to { transform: none; } }
@@ -562,7 +701,9 @@ a:hover { text-decoration-color: currentColor; }
 .almost > summary h2::before { content: '▸ '; color: var(--ink-soft); }
 .almost[open] > summary h2::before { content: '▾ '; }
 .almost__body { padding-top: .75rem; }
-.almost .card { border-left: 3px dashed var(--edge); }
+/* Пунктир по всему контуру: это те же карточки, но с мягкой границей —
+   решает звонок в центр, а не наш фильтр. */
+.almost .card { border-style: dashed; box-shadow: none; }
 
 .muted { color: var(--ink-soft); }
 
@@ -570,27 +711,29 @@ a:hover { text-decoration-color: currentColor; }
    Цвет направлений
 
    Единственное место, где живёт палитра девяти. Разметка её не знает:
-   SVG внутри берёт var(--d-ink) и var(--d-wash), а пиктограммы — currentColor.
-   Цвет выведен из материала занятия, а не назначен по кругу.
-   Все девять проверены: чернила дают ≥4,5:1 на бумаге, на листе и на
-   собственной заливке.
+   SVG внутри берёт var(--d-chip) и var(--d-wash), а пиктограммы — currentColor.
+
+   У каждого направления пара: пастельная заливка, на которой лежит
+   содержание, и насыщенный цвет значка. Текст при этом всегда чернильный —
+   так у всех девяти одни и те же 4,5:1, и ни одна пара не читается хуже
+   соседней.
    ══════════════════════════════════════════════════════════════════════════ */
 
-[data-dir]                        { --d-ink: var(--ink); --d-wash: var(--edge-soft); }
-[data-dir='robototehnika']        { --d-ink: #2c6146; --d-wash: #c9dcd0; } /* текстолит платы */
-[data-dir='plavanie']             { --d-ink: #155a67; --d-wash: #c2dce1; } /* вода и кафель   */
-[data-dir='muzyka']               { --d-ink: #6e4b0f; --d-wash: #e3d3b0; } /* латунь духовых  */
-[data-dir='yazyki']               { --d-ink: #2f4a96; --d-wash: #c7d2ec; } /* чернила         */
-[data-dir='shahmaty']             { --d-ink: #4d4740; --d-wash: #cfc9bf; } /* графит и камень */
-[data-dir='risovanie']            { --d-ink: #8a4029; --d-wash: #e9cdc0; } /* сангина         */
-[data-dir='edinoborstva']         { --d-ink: #4f5824; --d-wash: #d5dab8; } /* солома татами   */
-[data-dir='tancy']                { --d-ink: #8a3352; --d-wash: #e9c9d3; } /* бордо кулис     */
-[data-dir='teatr']                { --d-ink: #5e3a75; --d-wash: #d8cbe6; } /* сливовый бархат */
+[data-dir]                 { --d-ink: var(--ink); --d-wash: var(--edge-soft); --d-chip: var(--ink-soft); }
+[data-dir='robototehnika'] { --d-wash: #bff0dc; --d-chip: #3dc9a6; }
+[data-dir='plavanie']      { --d-wash: #cde8ff; --d-chip: #5ab0ff; }
+[data-dir='muzyka']        { --d-wash: #ffe9a8; --d-chip: #ffc93c; }
+[data-dir='yazyki']        { --d-wash: #e3d6ff; --d-chip: #b08cff; }
+[data-dir='shahmaty']      { --d-wash: #ffd9c2; --d-chip: #ff9a5c; }
+[data-dir='risovanie']     { --d-wash: #ffd3e4; --d-chip: #ff8fb8; }
+[data-dir='edinoborstva']  { --d-wash: #ffcfc7; --d-chip: #ff6b4a; }
+[data-dir='tancy']         { --d-wash: #e2f5b0; --d-chip: #a6d94a; }
+[data-dir='teatr']         { --d-wash: #c8f0f0; --d-chip: #3cc8c8; }
 
 .ic { display: block; flex: none; }
 .dot {
-  width: .5rem; height: .5rem; border-radius: 50%;
-  background: var(--d-ink); flex: none;
+  width: .6rem; height: .6rem; border-radius: 50%;
+  background: var(--d-chip); box-shadow: 0 0 0 1.5px var(--ink); flex: none;
 }
 
 /* ── витрина направлений ─────────────────────────────────────────────────── */
@@ -607,49 +750,57 @@ a:hover { text-decoration-color: currentColor; }
   min-inline-size: 0;
 }
 .dirs { min-inline-size: 0; }
-.tiles legend { padding: 0; margin-bottom: .5rem; font-size: var(--t-small); color: var(--ink-soft); }
+.tiles legend { padding: 0; margin-bottom: .75rem; font-family: var(--disp); font-size: 1.25rem; font-weight: 700; color: var(--ink); }
 .tiles__grid { display: contents; }
 
 .tile {
-  display: flex; flex-direction: column; align-items: flex-start; gap: .375rem;
-  min-height: 6rem;
-  padding: .75rem .75rem .625rem;
-  border: 1px solid transparent;
-  border-radius: 5px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: .5rem;
+  min-height: 7rem;
+  padding: .75rem .875rem;
+  border: var(--bw) solid var(--ink);
+  border-radius: var(--r-tile);
+  box-shadow: var(--sh-m);
   background: var(--d-wash);
-  color: var(--d-ink);
+  color: var(--ink);
   font: inherit; text-align: left; cursor: pointer;
 }
-.tile:hover { border-color: var(--d-ink); }
+/* Пиктограмма сидит в насыщенном кружке — единственное место, где
+   у направления появляется его полный цвет. */
+.tile .ic {
+  width: 2.125rem; height: 2.125rem; padding: .3rem;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-in);
+  background: var(--d-chip); color: var(--ink);
+}
 .tile__name {
-  font-family: var(--disp); font-size: .8125rem; font-weight: 500;
-  line-height: 1.15; color: var(--ink);
+  align-self: stretch;
+  font-family: var(--sans); font-size: .8125rem; font-weight: 800;
+  line-height: 1.2; color: var(--ink);
 }
 .tile__n {
   margin-top: auto;
   font-family: var(--disp); font-variant-numeric: tabular-nums;
-  font-size: 1.125rem; font-weight: 500; line-height: 1; color: var(--d-ink);
+  font-size: 1.375rem; font-weight: 800; line-height: 1; color: var(--ink);
 }
-.tile[aria-pressed='true'] { background: var(--d-ink); border-color: var(--d-ink); }
-.tile[aria-pressed='true'] .ic,
-.tile[aria-pressed='true'] .tile__name,
-.tile[aria-pressed='true'] .tile__n { color: var(--surface); }
+/* Выбранное направление помечается второй обводкой внутрь, а не заливкой:
+   девять фонов слишком разные по светлоте, чтобы один цвет текста был
+   читаем на всех. */
+.tile[aria-pressed='true'] { box-shadow: inset 0 0 0 3px var(--ink), var(--sh-m); }
 /* Нулевая плитка гаснет, но не выбеливается: лента направлений должна
    остаться цельной полосой, а не распасться на пятна и дырки. */
-.tile[data-zero='1'] { background: var(--surface); }
+.tile[data-zero='1'] { background: var(--surface); box-shadow: none; }
 @supports (background: color-mix(in srgb, red 50%, blue)) {
-  .tile[data-zero='1'] { background: color-mix(in srgb, var(--d-wash) 40%, var(--paper)); }
+  .tile[data-zero='1'] { background: color-mix(in srgb, var(--d-wash) 35%, var(--paper)); }
 }
-.tile[data-zero='1'] .ic { opacity: .5; }
+.tile[data-zero='1'] .ic { opacity: .45; }
 .tile[data-zero='1'] .tile__name { color: var(--ink-soft); }
 .tile[data-zero='1'] .tile__n { color: var(--ink-soft); }
 
 /* ── рисунки пустых состояний ────────────────────────────────────────────── */
 
-.art { width: 7.5rem; height: auto; color: var(--ink-soft); margin-bottom: .75rem; }
+.art { width: 7.5rem; height: auto; color: var(--ink); margin-bottom: .75rem; stroke-width: 2.25; }
 .nothing-here { display: flex; flex-direction: column; align-items: flex-start; }
 .nothing-here p { margin: 0 0 .75rem; color: var(--ink-soft); max-width: 46ch; font-size: var(--t-small); }
-.nothing-here .art { color: var(--ink-soft); opacity: .7; }
+.nothing-here .art { color: var(--ink); opacity: .55; }
 
 /* ── маркер ребёнка: форма вместо цвета ──────────────────────────────────── */
 
@@ -666,18 +817,29 @@ a:hover { text-decoration-color: currentColor; }
 /* ── обложка на странице группы ──────────────────────────────────────────── */
 
 .hero-cover {
-  height: 7.5rem; margin: 0 0 1.25rem;
-  border: 1px solid var(--edge); border-radius: 6px; overflow: hidden;
+  height: 8.5rem; margin: 0 0 1.5rem;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-card); overflow: hidden;
+  box-shadow: var(--sh-m);
   position: relative; background: var(--d-wash);
 }
 .hero-cover .cover__svg { display: block; width: 100%; height: 100%; }
-.hero-cover .ic { position: absolute; top: .875rem; left: 1rem; color: var(--d-ink); }
+.hero-cover .ic {
+  position: absolute; top: 1rem; left: 1.125rem;
+  width: 2.5rem; height: 2.5rem; padding: .35rem;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-in);
+  background: var(--d-chip); color: var(--ink);
+}
 
 /* ── направление в заголовках и крошках ──────────────────────────────────── */
 
-.page-dir { display: flex; align-items: center; gap: .5rem; margin: 1.25rem 0 .25rem; color: var(--d-ink); }
-.page-dir span { font-family: var(--disp); font-size: var(--t-small); font-weight: 500; }
-.page-rule { height: 3px; width: 3.5rem; background: var(--d-ink); margin: 0 0 1rem; border-radius: 2px; }
+.page-dir { display: flex; align-items: center; gap: .625rem; margin: 1.5rem 0 .5rem; color: var(--ink); }
+.page-dir .ic {
+  width: 2rem; height: 2rem; padding: .28rem;
+  border: var(--bw) solid var(--ink); border-radius: 10px;
+  background: var(--d-chip); color: var(--ink);
+}
+.page-dir span { font-family: var(--disp); font-size: .9375rem; font-weight: 700; }
+.page-rule { height: 5px; width: 4rem; background: var(--d-chip); margin: 0 0 1rem; border-radius: var(--r-pill); box-shadow: 0 0 0 1.5px var(--ink); }
 .crumbs .dot { display: inline-block; margin-right: .35rem; vertical-align: middle; }
 
 /* ── мобильное ───────────────────────────────────────────────────────────── */
@@ -696,7 +858,7 @@ a:hover { text-decoration-color: currentColor; }
   }
   .tiles::-webkit-scrollbar { display: none; }
   .tiles legend { float: left; width: 100%; padding-inline: var(--gut); }
-  .tile { flex: 0 0 6.75rem; min-height: 5.5rem; scroll-snap-align: start; }
+  .tile { flex: 0 0 8rem; min-height: 6.5rem; scroll-snap-align: start; }
 
   /* Полоса-обложка на каждой из полусотни карточек — это километр
      прокрутки ради украшения. На узком экране от направления остаётся
@@ -709,7 +871,12 @@ a:hover { text-decoration-color: currentColor; }
 /* ── направление внутри строк и карточек ─────────────────────────────────── */
 
 /* Пиктограмма в заголовке карточки нужна только там, где нет полосы-обложки. */
-.card__mark { display: none; color: var(--d-ink); }
+.card__mark {
+  display: none;
+  width: 1.875rem; height: 1.875rem; padding: .25rem;
+  border: var(--bw) solid var(--ink); border-radius: 10px;
+  background: var(--d-chip); color: var(--ink);
+}
 @media (max-width: 37.49rem) {
   .card__mark { display: block; }
   .card__head { align-items: center; }
@@ -725,7 +892,7 @@ a:hover { text-decoration-color: currentColor; }
 
 .chip .dot { margin-right: .1rem; align-self: center; }
 .chip[aria-pressed='true'] .dot { box-shadow: 0 0 0 1px var(--paper); }
-.empty .art { color: var(--ink-soft); opacity: .8; margin-bottom: 1rem; width: 9rem; }
+.empty .art { color: var(--ink); opacity: .7; margin-bottom: 1rem; width: 9rem; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    Профиль, колокольчик и вход
@@ -742,7 +909,7 @@ a:hover { text-decoration-color: currentColor; }
   text-decoration: none; white-space: nowrap;
 }
 .top__link:hover { color: var(--ink); }
-.top__link--go { color: var(--ink); text-decoration: underline; text-decoration-color: var(--edge); }
+.top__link--go { color: var(--ink); font-weight: 800; text-decoration: underline; text-decoration-color: var(--go); }
 
 .bell { position: relative; }
 .bell__btn {
@@ -751,17 +918,17 @@ a:hover { text-decoration-color: currentColor; }
 }
 .bell__btn:hover { color: var(--ink); }
 .bell__n {
-  min-width: 1.1rem; font-size: var(--t-micro); line-height: 1.1rem;
-  color: var(--surface); background: var(--amber); border-radius: 999px;
-  text-align: center; padding: 0 .2rem;
+  min-width: 1.2rem; font-size: var(--t-micro); font-weight: 900; line-height: 1.1rem;
+  color: var(--ink); background: var(--gold); border: 1.5px solid var(--ink);
+  border-radius: var(--r-pill); text-align: center; padding: 0 .25rem;
 }
 .bell__n:empty { display: none; }
 
 .bell__drop {
   position: absolute; right: 0; top: calc(100% + .5rem); z-index: 40;
   width: min(24rem, calc(100vw - 2rem));
-  background: var(--surface); border: 1px solid var(--edge); border-radius: 8px;
-  max-height: 70vh; overflow-y: auto;
+  background: var(--surface); border: var(--bw) solid var(--ink); border-radius: var(--r-tile);
+  box-shadow: var(--sh-l); max-height: 70vh; overflow-y: auto;
 }
 .bell__head {
   display: flex; align-items: baseline; gap: 1rem; margin: 0;
@@ -776,7 +943,7 @@ a:hover { text-decoration-color: currentColor; }
 .bell__item a:hover { background: var(--paper); }
 .bell__item--new a::before {
   content: ''; position: absolute; left: .75rem; top: .95rem;
-  width: .4rem; height: .4rem; border-radius: 50%; background: var(--d-ink, var(--ink));
+  width: .45rem; height: .45rem; border-radius: 50%; background: var(--d-chip, var(--go));
 }
 .bell__title { font-size: var(--t-small); font-weight: 500; }
 .bell__item:not(.bell__item--new) .bell__title { font-weight: 400; color: var(--ink-soft); }
@@ -786,8 +953,9 @@ a:hover { text-decoration-color: currentColor; }
 .bell__empty .art { width: 6rem; }
 
 .login {
-  background: var(--surface); border: 1px solid var(--edge); border-radius: 8px;
-  padding: 1rem 1.125rem; margin: 1rem 0; max-width: 34rem;
+  background: var(--surface); border: var(--bw) solid var(--ink); border-radius: var(--r-card);
+  box-shadow: var(--sh-l);
+  padding: 1.25rem 1.375rem; margin: 1rem 0; max-width: 34rem;
 }
 .login--drop { position: absolute; right: var(--gut); top: 100%; z-index: 40; margin: .5rem 0 0; }
 .login__why { margin: 0 0 .5rem; font-weight: 500; }
@@ -806,12 +974,12 @@ a:hover { text-decoration-color: currentColor; }
 
 .login__step {
   align-self: stretch;
-  border: 1px solid var(--edge); border-radius: 6px; background: var(--paper);
-  padding: .75rem .875rem;
+  border: var(--bw) dashed var(--ink); border-radius: var(--r-tile); background: var(--paper);
+  padding: .875rem 1rem;
 }
 .login__code-cap { margin: 0; font-size: var(--t-small); color: var(--ink-soft); }
 .login__code {
-  margin: .125rem 0 .625rem; font-family: var(--disp); font-size: 1.75rem; line-height: 1.1;
+  margin: .125rem 0 .625rem; font-family: var(--disp); font-weight: 800; font-size: 1.75rem; line-height: 1.1;
   letter-spacing: .18em; font-variant-numeric: tabular-nums;
 }
 .login__go { margin: 0 0 .5rem; }
@@ -839,15 +1007,18 @@ a:hover { text-decoration-color: currentColor; }
 
 .follow {
   display: inline-flex; align-items: center; gap: .35rem;
-  border: 1px solid var(--edge); border-radius: 3px; background: var(--surface);
-  color: var(--ink); padding: .4rem .7rem; font: inherit; font-size: var(--t-small); cursor: pointer;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-btn); background: var(--surface);
+  box-shadow: var(--sh-s);
+  color: var(--ink); padding: .45rem .8rem; font: inherit; font-size: var(--t-small);
+  font-weight: 800; cursor: pointer;
 }
-.follow:hover { border-color: var(--ink-soft); }
-.follow[aria-pressed='true'] { background: var(--d-wash, var(--paper)); border-color: var(--d-ink, var(--ink)); color: var(--d-ink, var(--ink)); }
+.follow:hover { background: var(--paper); }
+.follow[aria-pressed='true'] { background: var(--d-wash, var(--gold)); }
 
 .demobar {
-  background: var(--amber-soft); border-bottom: 1px solid var(--edge);
-  padding: .5rem var(--gut); font-size: var(--t-small); text-align: center; color: var(--ink);
+  background: var(--gold); border-bottom: var(--bw) solid var(--ink);
+  padding: .5rem var(--gut); font-size: var(--t-small); font-weight: 700;
+  text-align: center; color: var(--ink);
 }
 .demobar a { margin-left: .5rem; }
 

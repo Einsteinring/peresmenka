@@ -32,6 +32,22 @@ const catalog = JSON.parse(readFileSync(join(ROOT, 'data', 'catalog.json'), 'utf
 const index = buildIndex(catalog, geo);
 const NOW = new Date();
 
+// Подвал со ссылками на девять направлений: единственная перелинковка,
+// которая есть на каждой странице. Собирается из каталога, а не из списка
+// в разметке, иначе после смены слага ссылка молча уводит в 404.
+const FOOT = `<footer class="foot">
+  <div class="foot__in">
+    <div>
+      <p class="foot__mark">Пересменка</p>
+      <p>Кружки и секции для детей в Петербурге. Демонстрационный проект: данные вымышлены,
+        записаться на самом деле нельзя.</p>
+    </div>
+    <ul class="foot__dirs">
+${index.directions.map((d) => `      <li><a href="/${d.slug}/">${esc(d.short || d.name)}</a></li>`).join('\n')}
+    </ul>
+  </div>
+</footer>`;
+
 // Старое дерево страниц сносим: иначе после смены слага в каталоге остаётся
 // висеть каталог с прежним адресом, и sitemap расходится с тем, что лежит.
 for (const dir of ['g', ...JSON.parse(readFileSync(join(ROOT, 'data', 'catalog.json'), 'utf8')).directions.map((d) => d.slug)]) {
@@ -81,10 +97,10 @@ function layout({ title, description, canonical, crumbs, body, jsonld, dir }) {
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${SITE}${canonical}">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='5' fill='%2313202A'/%3E%3Crect x='6' y='13' width='13' height='6' rx='1' fill='%239FC6E8'/%3E%3Crect x='21' y='13' width='5' height='6' rx='1' fill='%2352626E'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232A1E4A'/%3E%3Crect x='6' y='13' width='13' height='6' rx='3' fill='%23FF5A3C'/%3E%3Crect x='21' y='13' width='5' height='6' rx='2.5' fill='%23FFC93C'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;500;600&family=Onest:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Nunito:wght@400;700;800;900&display=swap">
 <link rel="stylesheet" href="/css/app.css">
 <link rel="stylesheet" href="/css/page.css">
 <script type="application/ld+json">${JSON.stringify(crumbLd)}</script>
@@ -107,9 +123,7 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script
 ${body}
 </main>
 
-<footer class="foot">
-  <p>Демонстрационный проект. Данные вымышлены, записаться на самом деле нельзя.</p>
-</footer>
+${FOOT}
 </body>
 </html>
 `;

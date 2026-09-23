@@ -81,7 +81,7 @@ function offerLogin(reason) {
 
 function mountSaveBar() {
   const bar = $('savebar');
-  bar.innerHTML = '<button type="button" class="btn btn--quiet" id="save-search">Сохранить поиск</button><span class="savebar__msg" id="save-msg"></span>';
+  bar.innerHTML = '<button type="button" class="btn btn--gold" id="save-search">Сохранить поиск</button><span class="savebar__msg" id="save-msg"></span>';
   $('save-search').addEventListener('click', async () => {
     const search = queryToSearch(q);
     if (!search) {

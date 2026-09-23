@@ -120,23 +120,11 @@ for (const [w, h] of [[390, 844], [360, 740]]) {
   writeFileSync(join(OUT, 'site-390-sheet-3.png'), await p.shotViewport());
 }
 
-// ── ноутбуки: 1366 и 1280, верх страницы до конца витрины ──
-// Кроме того, что есть сейчас, — варианты полей для девяти колонок. Они
-// навязываются стилем поверх site.css, чтобы решить по картинке; в сам
-// site.css попадёт только выбранный.
-const NINE = '.dtiles{grid-template-columns:repeat(9,minmax(0,1fr))}' +
-  '.dtiles .tile{padding:16px 13px}.dtiles .tile__name--long{font-size:13px;letter-spacing:-0.4px}';
-const LAPTOPS = [
-  [1366, 'now', ''],
-  [1366, 'edge40', ':root{--edge-x:40px}' + NINE],
-  [1280, 'now', ''],
-  [1280, 'edge40-tight', ':root{--edge-x:40px}' + NINE + '.dtiles{gap:12px}.dtiles .tile{padding:16px 10px}'],
-];
+// ── ноутбуки: 1366 и 1280 — верх страницы до конца витрины и шаги ──
 const laptops = [];
-for (const [w, key, css] of LAPTOPS) {
-  const p = await browser.open(`${site.origin}/`, { width: w, height: 1400 });
+for (const w of [1366, 1280]) {
+  const p = await browser.open(`${site.origin}/`, { width: w, height: 2400 });
   await p.waitFor('document.querySelectorAll(".tile").length === 9 && document.fonts.status === "loaded"');
-  if (css) await p.eval(`document.head.append(Object.assign(document.createElement('style'), { textContent: ${JSON.stringify(css)} }))`);
   const facts = await p.eval(`(() => {
     const tiles = [...document.querySelectorAll('.tile')];
     const rows = new Set(tiles.map((t) => Math.round(t.offsetTop))).size;
@@ -148,9 +136,12 @@ for (const [w, key, css] of LAPTOPS) {
     return { rows, broken, overflow: document.documentElement.scrollWidth - innerWidth };
   })()`);
   const end = await p.eval(`${bottom('#napravleniya')} + 24`);
-  const file = `site-${w}-${key}.png`;
+  const file = `site-${w}.png`;
   writeFileSync(join(OUT, file), await p.shot(0, end, w));
-  laptops.push({ w, key, file, ...facts });
+  const s = await p.eval(`[${top('#podbor')}, ${top('#gruppy')}]`);
+  const steps = `site-steps-${w}.png`;
+  writeFileSync(join(OUT, steps), await p.shot(s[0], s[1] - s[0], w));
+  laptops.push({ w, file, steps, ...facts });
   await p.close();
 }
 

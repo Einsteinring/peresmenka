@@ -34,7 +34,8 @@
   --f-body: 'Nunito', system-ui, sans-serif;
   --f-disp: 'Unbounded', 'Nunito', system-ui, sans-serif;
 
-  /* Поля: 80 px на 1440, как в эталоне; на узких экранах — 16 px. */
+  /* Поля: 80 px на 1440, как в эталоне; уже 1430 — не больше 40 (ради
+     девяти плиток в ряд, см. витрину); на узких экранах — 16 px. */
   --edge-x: clamp(16px, 5.56vw, 80px);
 }
 
@@ -289,13 +290,21 @@ body { position: relative; overflow-x: clip; }
    92 px, а «Робототехника» даже при 13 px и трекинге −0,4 занимает 96.
    Поэтому у длинных имён кегль на 2 px меньше и трекинг плотнее, а боковые
    поля плитки 13 px вместо 16 — на глаз разницы нет, а 6 px появляются.
-   Девять колонок — только от 1430 px, где так помещается; уже — пять.
-   Мягкие переносы из js/app.js остаются запасным вариантом. */
+   Уже 1430 девять колонок держатся за счёт полей: поля страницы 40
+   вместо 80, зазор между плитками 12 вместо 16, поля плитки 10 вместо 13.
+   Так ряд цел до 1263 px с запасом 2 px (в эталоне на 1440 — 1,3). Уже —
+   пять колонок. Мягкие переносы из js/app.js — страховка на крупный
+   системный шрифт. */
 .dtiles .tile { padding: 16px 13px; }
 .dtiles .tile__name { hyphens: manual; }
 .dtiles .tile__name--long { font-size: 13px; letter-spacing: -0.4px; }
 @media (max-width: 1429px) {
-  .dtiles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  :root { --edge-x: clamp(16px, 5.56vw, 40px); }
+  .dtiles { gap: 12px; }
+  .dtiles .tile { padding: 16px 10px; }
+}
+@media (max-width: 1262px) {
+  .dtiles { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
   .dtiles .tile { padding: 16px; }
   .dtiles .tile__name--long { font-size: 15px; letter-spacing: 0; }
 }
@@ -656,9 +665,10 @@ body { position: relative; overflow-x: clip; }
 
 /* ── ширины между эталоном и шторкой ─────────────────────────────────────── */
 
-/* Уже 1360 средняя колонка сжимает сетку недели до ячеек меньше 11 px.
-   Тогда шаги 1 и 2 рядом, шаг 3 — под ними во всю ширину: порядок цел. */
-@media (max-width: 1359px) {
+/* Три шага в ряд, пока ячейка сетки недели не меньше 11 px (в эталоне на
+   1440 — 12,6). С полями 40 это до 1312 px включительно — замерено. Уже
+   шаги 1 и 2 рядом, шаг 3 — под ними во всю ширину: порядок цел. */
+@media (max-width: 1311px) {
   .steps { grid-template-columns: 320px minmax(0, 1fr); }
   .step--where { grid-column: 1 / -1; }
   .step--where .modes { display: grid; grid-template-columns: repeat(4, minmax(0, max-content)); }

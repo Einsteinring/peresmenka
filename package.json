@@ -10,6 +10,7 @@
     "serve": "node tools/serve.mjs",
     "test": "node --test \"test/*.test.mjs\"",
     "demo": "node tools/gen-demo-account.mjs",
-    "check:redis": "node --env-file=.env tools/check-upstash.mjs"
+    "check:redis": "node --env-file=.env tools/check-upstash.mjs",
+    "test:ui": "node --test --test-concurrency=1 \"test/ui/*.test.mjs\""
   }
 }

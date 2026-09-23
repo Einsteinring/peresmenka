@@ -184,249 +184,8 @@ a:hover { text-decoration-color: currentColor; }
 /* Поле формы: подпись над полем. Нужно форме записи на странице группы. */
 .field { display: grid; gap: .25rem; font-size: var(--t-small); margin-bottom: .625rem; }
 
-/* ── панель результата ───────────────────────────────────────────────────── */
-
-.bar {
-  position: sticky; top: 0; z-index: 20;
-  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem;
-  margin: 1.75rem 0 0; padding: .75rem 0;
-  background: var(--paper);
-  border-bottom: var(--bw) dashed var(--ink);
-}
-.bar__count { margin: 0; font-family: var(--disp); font-size: 1rem; font-weight: 700; }
-.bar__count .num { font-size: 2.25rem; letter-spacing: -0.03em; font-weight: 800; }
-.bar__right { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; font-size: var(--t-small); }
-.sortbox, .strictbox { display: flex; align-items: center; gap: .4rem; color: var(--ink-soft); }
-.sortbox select {
-  border: var(--bw) solid var(--ink); border-radius: var(--r-in); background: var(--surface);
-  padding: .3rem .45rem; font: inherit; font-size: var(--t-small); font-weight: 700; color: var(--ink);
-}
-
-/* ── результаты ──────────────────────────────────────────────────────────── */
-
-.results { padding-top: 1rem; }
-.results:focus { outline: none; }
-
-/* Две колонки, а не три как в эталоне: в карточке живёт полоса занятия на
-   шкале дня — главная графика проекта, — и в 300 px она нечитаема.
-   Заголовки разделов и блок «обоих сразу» занимают всю ширину. */
-@media (min-width: 78rem) {
-  .results, .almost__body { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.25rem; align-items: start; }
-  .results > :not(.card), .almost__body > :not(.card) { grid-column: 1 / -1; }
-}
-
-.group-head {
-  margin: 1.5rem 0 .75rem; padding-bottom: .375rem;
-  border-bottom: 1px solid var(--edge);
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem 1rem;
-}
-.group-head h2 { margin: 0; font-size: 1rem; font-weight: 500; }
-.group-head p { margin: 0; font-size: var(--t-small); color: var(--ink-soft); max-width: 52ch; }
-
-.card {
-  background: var(--surface);
-  border: var(--bw) solid var(--ink);
-  border-radius: var(--r-card);
-  box-shadow: var(--sh-l);
-  margin-bottom: 1.25rem;
-  overflow: hidden;
-}
-/* Обложка стала полосой сверху, как в эталоне: на ней живут значок
-   направления, честный статус набора и сердце. */
-.card__cover {
-  position: relative; height: 8.5rem;
-  background: var(--d-wash);
-  border-bottom: var(--bw) solid var(--ink);
-}
-.card__cover .cover__svg { display: block; width: 100%; height: 100%; }
-.card__badge {
-  position: absolute; top: .75rem; left: .875rem;
-  display: block; padding: .4rem;
-  border: var(--bw) solid var(--ink); border-radius: var(--r-in);
-  background: var(--surface); color: var(--ink);
-}
-.card__status {
-  position: absolute; left: .875rem; bottom: .75rem;
-  border: var(--bw) solid var(--ink); border-radius: var(--r-pill);
-  background: var(--lime); color: var(--ink);
-  padding: .3rem .7rem; font-size: var(--t-small); font-weight: 900;
-}
-.card__status--soon { background: var(--gold); }
-.fav {
-  position: absolute; top: .75rem; right: .875rem;
-  display: flex; align-items: center; justify-content: center;
-  width: 2.375rem; height: 2.375rem; padding: 0;
-  border: var(--bw) solid var(--ink); border-radius: 50%;
-  background: var(--surface); color: var(--ink); cursor: pointer;
-  transition: transform .06s ease-out, background-color .12s;
-}
-.fav:hover { background: var(--paper); }
-.fav:active { transform: scale(.92); }
-.fav[aria-pressed='true'] { background: var(--go); }
-.fav[aria-pressed='true'] .ic { fill: var(--ink); }
-.card__body { padding: 1rem 1.125rem 1.125rem; min-width: 0; }
-
-.card__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .75rem; }
-.card__title { margin: 0; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.015em; }
-.card__title a { text-decoration: none; }
-.card__title a:hover { text-decoration: underline; }
-.card__subtype { font-family: var(--sans); font-size: var(--t-small); font-weight: 400; color: var(--ink-soft); }
-.card__org { margin: 0; font-size: var(--t-small); color: var(--ink-soft); }
-
-/* Адрес, метро и возраст — мелкие пилюли: в эталоне это чипы, и они же
-   отделяют «где» от расписания ниже. */
-.card__place {
-  margin: .5rem 0 .625rem;
-  display: flex; flex-wrap: wrap; gap: .35rem;
-  font-size: var(--t-small);
-}
-.card__place > span {
-  background: var(--paper); border-radius: var(--r-s);
-  padding: .2rem .5rem; color: var(--ink);
-}
-.card__metro, .card__dist { color: var(--ink-soft); }
-.card__dist { font-variant-numeric: tabular-nums; }
-/* Элемент несёт оба класса, а .age ниже задаёт grid — поэтому тут
-   селектор по тегу, иначе пилюля растягивается во всю карточку. */
-p.age--plain {
-  display: inline-block; margin: 0 0 .625rem;
-  background: var(--d-wash); border-radius: var(--r-s);
-  padding: .2rem .55rem; font-size: var(--t-small); color: var(--ink);
-}
-
-/* возраст */
-
-.age { list-style: none; margin: 0 0 .625rem; padding: 0; display: grid; gap: .15rem; }
-.age__row { display: flex; flex-wrap: wrap; gap: .2rem .6rem; font-size: var(--t-small); }
-.age__who { font-weight: 500; min-width: 5rem; }
-.age__row--near .age__who, .age__row--near .age__note { color: var(--ink-soft); }
-
-/* занятия — главная графика проекта */
-
-.lessons { list-style: none; margin: 0; padding: 0; display: grid; gap: .2rem; }
-
-.lesson {
-  display: grid;
-  grid-template-columns: 1.75rem 6.5rem minmax(4rem, 1fr);
-  align-items: center; gap: .5rem;
-  font-size: var(--t-small);
-}
-.lesson__day { color: var(--ink-soft); }
-.lesson__time { font-family: var(--disp); font-variant-numeric: tabular-nums; }
-.lesson__track {
-  position: relative; display: block; height: 14px;
-  background: var(--paper);
-  border: 1.5px solid var(--ink); border-radius: var(--r-pill);
-  overflow: hidden;
-}
-.lesson__win { position: absolute; top: 0; bottom: 0; background: var(--window-soft); }
-.lesson__bar { position: absolute; top: 2px; bottom: 2px; border-radius: var(--r-pill); background: var(--ink-soft); }
-.lesson--fits .lesson__bar { background: var(--ink); }
-.lesson--misses .lesson__bar { background: var(--amber-bright); box-shadow: 0 0 0 1px var(--ink); }
-.lesson__note { grid-column: 3; font-size: var(--t-micro); color: var(--amber); }
-.lesson--misses { align-items: start; }
-.lesson--misses .lesson__day, .lesson--misses .lesson__time { color: var(--ink-soft); }
-
-.fitline { margin: .4rem 0 0; font-size: var(--t-small); color: var(--amber); }
-.fitline--all { color: var(--ink-soft); }
-
-/* факты */
-
-.card__facts {
-  display: flex; flex-wrap: wrap; gap: .25rem 1.5rem;
-  margin: .75rem 0 .5rem; padding-top: .625rem;
-  border-top: 1px solid var(--edge-soft);
-}
-.card__facts > div { display: flex; align-items: baseline; gap: .4rem; }
-.card__facts dt { font-size: var(--t-micro); color: var(--ink-soft); }
-.card__facts dd { margin: 0; font-size: var(--t-small); }
-.card__facts dd.num { font-family: var(--disp); font-weight: 700; font-size: .9375rem; }
-.card__facts dd.urgent { color: var(--amber); }
-
-.card__tail {
-  margin: 0; display: flex; flex-wrap: wrap; gap: .1rem 1.25rem;
-  font-size: var(--t-small); color: var(--ink-soft);
-}
-
-.card__actions {
-  margin-top: .75rem; padding-top: .625rem;
-  border-top: 1px solid var(--edge-soft);
-  display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;
-}
-.cmp { display: flex; align-items: center; gap: .4rem; font-size: var(--t-small); color: var(--ink-soft); cursor: pointer; }
-
-/* ── обоих сразу ─────────────────────────────────────────────────────────── */
-
-.tog {
-  background: var(--window-soft);
-  border: var(--bw) solid var(--ink);
-  border-radius: var(--r-tile);
-  box-shadow: var(--sh-m);
-  padding: .875rem 1.125rem; margin-bottom: 1rem;
-}
-.tog__head {
-  margin: 0 0 .5rem; font-weight: 500;
-  display: flex; flex-wrap: wrap; gap: .2rem .75rem; align-items: baseline;
-}
-.tog__where { font-weight: 400; font-size: var(--t-small); color: var(--ink-soft); }
-.tog__list { list-style: none; margin: 0; padding: 0; display: grid; gap: .25rem; }
-.tog__list li { display: flex; flex-wrap: wrap; gap: .2rem .75rem; font-size: var(--t-small); align-items: baseline; }
-.tog__who { min-width: 5rem; font-weight: 500; }
-.tog__when { font-family: var(--disp); font-variant-numeric: tabular-nums; color: var(--ink-soft); }
-.tog__sum { margin: .5rem 0 0; padding-top: .5rem; border-top: 1px solid var(--edge-soft); font-size: var(--t-small); }
-
-/* ── пусто и подсказки ───────────────────────────────────────────────────── */
-
-.empty {
-  background: var(--surface); border: var(--bw) solid var(--ink);
-  border-radius: var(--r-card); box-shadow: var(--sh-l);
-  padding: 1.5rem;
-}
-.empty h2 { margin: 0 0 .25rem; font-size: 1.375rem; font-weight: 700; }
-.empty p { margin: 0 0 1rem; color: var(--ink-soft); max-width: 60ch; }
-
-.fix { list-style: none; margin: 0; padding: 0; display: grid; gap: .375rem; }
-.fix__btn {
-  width: 100%; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem 1rem;
-  border: var(--bw) solid var(--ink); border-radius: var(--r-btn); background: var(--paper);
-  box-shadow: var(--sh-s);
-  padding: .65rem .875rem; font: inherit; text-align: left; cursor: pointer;
-}
-.fix__btn:hover { background: var(--amber-soft); }
-.fix__count { margin-left: auto; font-family: var(--disp); font-weight: 700; white-space: nowrap; }
-.fix__text { font-size: .9375rem; }
-
-/* ── сравнение ───────────────────────────────────────────────────────────── */
-
-.cmpbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-  display: flex; flex-wrap: wrap; align-items: center; gap: .75rem;
-  padding: .625rem var(--gut);
-  background: var(--ink); color: var(--paper);
-  border-top: 1px solid var(--ink);
-}
-.cmpbar__txt { margin: 0; font-size: var(--t-small); }
-.cmpbar > div { margin-left: auto; display: flex; gap: .5rem; }
-.cmpbar .btn { border-color: var(--paper); background: var(--paper); color: var(--ink); }
-.cmpbar .btn--quiet { background: transparent; color: var(--paper); border-color: var(--paper); box-shadow: none; }
-
-.cmpdlg { border: var(--bw) solid var(--ink); border-radius: var(--r-card); padding: 0; max-width: min(64rem, 94vw); width: 100%; background: var(--surface); }
-.cmpdlg::backdrop { background: rgba(19, 32, 42, .45); }
-.cmpdlg__in { padding: 1rem; }
-.cmpdlg__head { display: flex; align-items: baseline; gap: 1rem; margin-bottom: .75rem; }
-.cmpdlg__head h2 { margin: 0; font-size: 1.25rem; }
-.cmpdlg__head .btn { margin-left: auto; }
-.cmptab { width: 100%; border-collapse: collapse; font-size: var(--t-small); }
-.cmptab th, .cmptab td { text-align: left; vertical-align: top; padding: .5rem .625rem; border-top: 1px solid var(--edge-soft); }
-.cmptab thead th { border-top: 0; font-weight: 500; }
-.cmptab th[scope='row'] { color: var(--ink-soft); font-weight: 400; white-space: nowrap; }
-.cmptab .num { font-family: var(--disp); font-variant-numeric: tabular-nums; }
-.cmpdlg__body { overflow-x: auto; }
-
 /* ── низ ─────────────────────────────────────────────────────────────────── */
 
-.more { display: block; margin: 1rem auto 0; }
-.noscript { background: var(--surface); border: var(--bw) solid var(--ink); border-radius: var(--r-tile); padding: 1rem; }
 /* Волна вместо линии: край страницы не обрывается правилом, а стекает.
    Рисуется одним инлайновым SVG в фоне поверх тёмного подвала, поэтому
    не требует ни файла картинки, ни лишней разметки. */
@@ -457,35 +216,11 @@ p.age--plain {
 
 @media (max-width: 63.99rem) {
   /* Полоса «Фильтры» — в css/site.css. */
-
-  .bar { top: 0; }
-  .card__facts { gap: .25rem 1rem; }
-}
-
-/* Ниже 768 px сетки нет совсем: ячейка в 11 px пальцем не нажимается, и
-   подделывать её кнопкой-невидимкой честнее не станет. Остаётся список —
-   дни кнопками по 44 px и два выбора времени. Правят они ту же маску. */
-@media (max-width: 47.99rem) {
-  .lesson { grid-template-columns: 1.6rem 6rem minmax(3rem, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
-
-/* ── блок «почти подходит» ───────────────────────────────────────────────── */
-
-.almost { margin-top: 1.5rem; }
-.almost > summary { cursor: pointer; list-style: none; }
-.almost > summary::-webkit-details-marker { display: none; }
-.almost > summary.group-head { display: flex; }
-.almost > summary h2 { font-size: 1rem; font-weight: 500; }
-.almost > summary h2::before { content: '▸ '; color: var(--ink-soft); }
-.almost[open] > summary h2::before { content: '▾ '; }
-.almost__body { padding-top: .75rem; }
-/* Пунктир по всему контуру: это те же карточки, но с мягкой границей —
-   решает звонок в центр, а не наш фильтр. */
-.almost .card { border-style: dashed; box-shadow: none; }
 
 .muted { color: var(--ink-soft); }
 
@@ -529,18 +264,6 @@ p.age--plain {
 .nothing-here p { margin: 0 0 .75rem; color: var(--ink-soft); max-width: 46ch; font-size: var(--t-small); }
 .nothing-here .art { color: var(--ink); opacity: .55; }
 
-/* ── маркер ребёнка: форма вместо цвета ──────────────────────────────────── */
-
-/* Перелёт по времени — жёсткий факт, он горит янтарным. Возраст ±1 —
-   мягкая граница, где решает звонок в центр, поэтому у неё полый маркер
-   и пунктир, а не другой оттенок. */
-.age__who::before {
-  content: ''; display: inline-block; vertical-align: baseline;
-  width: .5rem; height: .5rem; margin-right: .4rem;
-  background: var(--ink);
-}
-.age__row--near .age__who::before { background: none; box-shadow: inset 0 0 0 1.5px var(--ink-soft); }
-
 /* ── обложка на странице группы ──────────────────────────────────────────── */
 
 .hero-cover {
@@ -572,29 +295,16 @@ p.age--plain {
 /* ── мобильное ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 37.49rem) {
-  /* Обложку на телефоне не убираем — на ней живут статус и сердце, — но
-     режем вдвое: полсотни карточек по 136 px это километр прокрутки. */
-  .card__cover { height: 4.75rem; }
-  /* На укороченной обложке значок и статус не помещаются друг под другом,
-     поэтому встают в ряд. */
-  .card__status {
-    left: 3.75rem; top: 1.05rem; bottom: auto;
-    font-size: var(--t-micro); padding: .25rem .6rem;
-  }
-  .card__badge { top: .875rem; }
-  .fav { width: 2.125rem; height: 2.125rem; top: .875rem; }
   .hero-cover { height: 6rem; }
 }
 
 /* ── направление внутри строк ────────────────────────────────────────────── */
 
 .row__title .dot { display: inline-block; margin-right: .45rem; vertical-align: middle; }
-.tog__list .dot { display: inline-block; vertical-align: middle; }
 
 /* Витрина и чипы — один фильтр в двух видах; вместе они не показываются
    никогда, иначе один и тот же список из девяти имён стоит на экране дважды. */
 
-.empty .art { color: var(--ink); opacity: .7; margin-bottom: 1rem; width: 9rem; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    Профиль, колокольчик и вход

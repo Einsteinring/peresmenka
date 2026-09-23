@@ -15,6 +15,10 @@
     "steps": {
       "file": "ref-steps.png",
       "height": 704
+    },
+    "results": {
+      "file": "ref-results.png",
+      "height": 729
     }
   },
   "mineShots": {
@@ -32,7 +36,11 @@
     },
     "steps": {
       "file": "site-steps.png",
-      "height": 713
+      "height": 685
+    },
+    "results": {
+      "file": "site-results.png",
+      "height": 2568
     }
   },
   "phones": [

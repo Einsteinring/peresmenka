@@ -145,6 +145,35 @@ export function coverSvg(group, width = 88, height = 240) {
     '</svg>';
 }
 
+// Обложка карточки в выдаче — три композиции эталона: круг в углу, повёрнутый
+// квадрат, волна по низу. Какая из трёх и куда сдвинуты фигуры — из id
+// группы, поэтому соседние карточки не повторяют друг друга, а при
+// пересборке ничего не тасуется. Холст 400×150, срез по ширине карточки.
+export function cardCover(group) {
+  const rnd = seeded(hash32(`card:${group.id}`));
+  const dx = Math.round((rnd() - 0.5) * 60);
+  const turn = Math.round(8 + rnd() * 16);
+  const kind = Math.floor(rnd() * 3);
+  const chip = 'fill="var(--d-chip)"';
+  const white = 'fill="var(--surface)"';
+  const shapes = [
+    `<circle cx="${330 + dx}" cy="30" r="60" ${chip} opacity=".5"/><circle cx="${40 + dx}" cy="150" r="50" ${white} opacity=".6"/>` +
+      `<path d="M${210 + dx} 124l10-20 10 20-10-5z" fill="var(--ink)" opacity=".15"/>`,
+    `<rect x="${280 + dx}" y="-20" width="130" height="130" rx="30" ${chip} opacity=".5" transform="rotate(${turn} ${345 + dx} 45)"/>` +
+      `<circle cx="${200 + dx}" cy="160" r="46" ${white} opacity=".6"/>`,
+    `<path d="M0 110c30-18 60-18 90 0s60 18 90 0 60-18 90 0 60 18 90 0 60-18 90 0v60H0z" ${chip} opacity=".55" transform="translate(${dx / 2} 0)"/>` +
+      `<circle cx="${340 + dx / 2}" cy="36" r="22" ${white} opacity=".7"/>`
+  ];
+  return `<svg class="cover__svg" viewBox="0 0 400 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">${shapes[kind]}</svg>`;
+}
+
+// Наклон значка на обложке — тоже из id: в эталоне у трёх карточек −6°, 5°, −4°.
+export function cardTilt(group) {
+  const rnd = seeded(hash32(`tilt:${group.id}`));
+  const deg = 3 + Math.round(rnd() * 3);
+  return rnd() < 0.5 ? -deg : deg;
+}
+
 /* ── рисунки пустых состояний ────────────────────────────────────────────── */
 
 // Та же обводка 1,75, что и у пиктограмм: пустой экран — часть того же набора,

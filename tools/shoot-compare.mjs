@@ -18,7 +18,7 @@ const OUT = join(ROOT, 'design', 'compare');
 mkdirSync(OUT, { recursive: true });
 
 // Какие секции сравниваем на этой контрольной точке.
-const SECTIONS = ['header', 'hero', 'tiles', 'steps'];
+const SECTIONS = ['header', 'hero', 'tiles', 'steps', 'results'];
 
 const site = await startSite();
 const browser = await startBrowser();
@@ -43,7 +43,8 @@ await ref.waitFor('document.fonts.status === "loaded"');
 const refB = await ref.eval(`(() => {
   const s = document.querySelectorAll('section');
   const t = (e) => e.getBoundingClientRect().top + scrollY;
-  return { header: [0, t(s[0])], hero: [t(s[0]), t(s[1])], tiles: [t(s[1]), t(s[2])], steps: [t(s[2]), t(s[3])] };
+  return { header: [0, t(s[0])], hero: [t(s[0]), t(s[1])], tiles: [t(s[1]), t(s[2])], steps: [t(s[2]), t(s[3])],
+    results: [t(s[3]), t(document.querySelector('footer'))] };
 })()`);
 const refShots = await cut(ref, 'ref', refB, 1440);
 
@@ -54,7 +55,8 @@ const mineB = await mine.eval(`({
   header: [0, ${top('.hero')}],
   hero: [${top('.hero')}, ${top('#napravleniya')}],
   tiles: [${top('#napravleniya')}, ${top('#podbor')}],
-  steps: [${top('#podbor')}, ${top('#gruppy')}]
+  steps: [${top('#podbor')}, ${top('#gruppy')}],
+  results: [${top('#gruppy')}, ${top('.foot')}]
 })`);
 const mineShots = await cut(mine, 'site', mineB, 1440);
 
@@ -67,6 +69,38 @@ const mineShots = await cut(mine, 'site', mineB, 1440);
   await f.waitFor('new URLSearchParams(location.search).get("win")');
   const b = await f.eval(`[${top('#podbor')}, ${top('#gruppy')}]`);
   writeFileSync(join(OUT, 'site-steps-filled.png'), await f.shot(b[0], b[1] - b[0], 1440));
+}
+
+// ── результаты в состояниях, которых в эталоне нет ──
+async function resultsShot(path, file, height, prep) {
+  const p = await browser.open(`${site.origin}${path}`, { width: 1440, height: 2600 });
+  await p.waitFor('document.querySelectorAll(".tile").length === 9 && document.fonts.status === "loaded"');
+  if (prep) await prep(p);
+  const y = await p.eval(top('#gruppy'));
+  writeFileSync(join(OUT, file), await p.shot(y, height, 1440));
+  await p.close();
+}
+// двое детей и окно: «обоих сразу», полосы занятий, возраст по каждому
+await resultsShot('/?kids=7,10', 'site-results-kids.png', 1500, async (p) => {
+  await p.click(`__ui.text('button', '^после школы')`);
+  await p.waitFor('/обоих в одно время/i.test(document.body.innerText)');
+});
+// пусто: подсказки с числами и «почти подходит»
+await resultsShot('/?kids=3&dir=plavanie', 'site-results-empty.png', 900);
+// сравнение: две группы отмечены, таблица открыта
+{
+  const p = await browser.open(`${site.origin}/?kids=8`, { width: 1440, height: 900 });
+  await p.waitFor('document.querySelectorAll(".tile").length === 9 && document.fonts.status === "loaded"');
+  await p.eval(`document.getElementById('gruppy').scrollIntoView()`);
+  await p.click(`__ui.text('label', '^сравнить$', 0)`);
+  await p.click(`__ui.text('label', '^сравнить$', 1)`);
+  await new Promise((r) => setTimeout(r, 200));
+  writeFileSync(join(OUT, 'site-results-cmpbar.png'), await p.shotViewport());
+  await p.click(`__ui.all('button').filter((b) => /^сравнить$/i.test(__ui.norm(b.textContent))).pop()`);
+  await p.waitFor(`!!document.querySelector('dialog[open] table')`);
+  await new Promise((r) => setTimeout(r, 200));
+  writeFileSync(join(OUT, 'site-results-cmp.png'), await p.shotViewport());
+  await p.close();
 }
 
 // ── сайт, вошедший (демо): колокольчик и профиль как в эталоне ──
@@ -102,6 +136,22 @@ for (const [w, h] of [[390, 844], [360, 740]]) {
   await p.eval('window.scrollTo(0, document.documentElement.scrollHeight)');
   await new Promise((r) => setTimeout(r, 400));
   writeFileSync(join(OUT, 'site-390-end.png'), await p.shotViewport());
+}
+
+// ── результаты на телефоне: панель и первая карточка; двое детей с окном ──
+for (const [path, file, prep] of [
+  ['/', 'site-390-results.png'],
+  ['/?kids=7,10', 'site-390-results-kids.png', async (p) => {
+    await p.eval(`document.querySelector('[data-preset]').click()`);
+    await p.waitFor('/обоих в одно время/i.test(document.body.innerText)');
+  }]
+]) {
+  const p = await browser.open(`${site.origin}${path}`, { width: 390, height: 844, mobile: true });
+  await p.waitFor('document.querySelectorAll(".tile").length === 9 && document.fonts.status === "loaded"');
+  if (prep) await prep(p);
+  const y = await p.eval(top('#gruppy'));
+  writeFileSync(join(OUT, file), await p.shot(y, 1500, 390));
+  await p.close();
 }
 
 // ── шторка на телефоне: открыта, наверху и прокрученная к шагу 3 ──

@@ -5,9 +5,9 @@
    классы. Телефонной версии в эталоне нет — она решена здесь в том же
    языке и помечена отдельно.
 
-   Этот файл пока покрывает шапку, героя и витрину направлений. Остальные
-   блоки главной и остальные страницы переедут сюда на следующих шагах,
-   и тогда css/app.css уйдёт целиком. */
+   Этот файл покрывает главную от шапки до результатов. Подвал, статические
+   страницы и кабинет переедут сюда на следующих шагах, и тогда css/app.css
+   уйдёт целиком. */
 
 :root {
   --ink: #2a1e4a;
@@ -730,4 +730,383 @@ body { position: relative; overflow-x: clip; }
   .alt summary { display: none; }
   .alt__body { padding-top: 0; }
   .step__foot { display: block; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Результаты
+
+   Эталон: крупное «310 групп нашлось» над пунктиром, справа сортировка,
+   «Сбросить» и золотая закладка «Сохранить поиск»; три карточки в ряд;
+   белая пилюля «Показать ещё». Всё, чего в эталоне нет, но что сайт умеет,
+   встроено в эти же блоки: «Сравнить» — пилюлей на обложке рядом с сердцем,
+   полоса занятия на шкале дня — в карточке вместо пилюль расписания, когда
+   окно задано, «обоих сразу» и «почти подходит» — секциями того же языка.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.res { padding-top: 72px; }
+.res :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: 14px; }
+
+/* ── панель ──────────────────────────────────────────────────────────────── */
+
+/* Панель не липкая, как в эталоне: на широком экране фильтры над ней,
+   на телефоне число групп всегда на полосе «Фильтры». */
+.res__bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px;
+  padding-bottom: 20px; border-bottom: var(--line-thick) dotted var(--ink);
+}
+.res__t { margin: 0; }
+.res__t > span { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.res__n { font: 800 52px/1 var(--f-disp); letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.res__w { font: 600 24px/1.2 var(--f-disp); }
+
+.res__tools { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.res .sortbox { display: flex; align-items: center; gap: 10px; font: 800 15px var(--f-body); }
+.res .sortbox select {
+  height: 46px; padding: 0 14px; box-sizing: border-box;
+  border: var(--line) solid var(--ink); border-radius: 14px; background: var(--white);
+  font: 800 15px var(--f-body); color: var(--ink); cursor: pointer;
+}
+.res__btn {
+  height: 46px; padding: 0 18px; box-sizing: border-box;
+  display: inline-flex; align-items: center; gap: 8px;
+  border: var(--line) solid var(--ink); border-radius: 14px; background: var(--white);
+  font: 800 15px var(--f-body); color: var(--ink); cursor: pointer;
+}
+.res__btn:hover { background: var(--paper); }
+/* Золото — только «сохранить»: это закладка, а не действие над каталогом. */
+.res__btn--save { background: var(--sun); box-shadow: var(--lift-s); font-weight: 900; }
+.res__btn--save:hover { background: #f0b81f; }
+.res__btn--save:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.savebar { display: contents; }
+
+.res .strictbox {
+  flex-basis: 100%; display: flex; align-items: center; gap: 10px;
+  font: 800 15px var(--f-body); color: var(--ink); cursor: pointer;
+}
+.res .strictbox input { width: 20px; height: 20px; margin: 0; accent-color: var(--ink); }
+
+.res__msg { margin: 14px 0 0; font: 700 15px var(--f-body); }
+.res__msg:empty { display: none; }
+.res__msg a { font-weight: 900; }
+#saveslot:not(:empty) { margin-top: 20px; }
+
+/* ── сетка карточек ──────────────────────────────────────────────────────── */
+
+.results { padding-top: 28px; }
+.results:focus { outline: none; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; align-items: stretch; }
+
+/* ── карточка ────────────────────────────────────────────────────────────── */
+
+.card {
+  display: flex; flex-direction: column; min-width: 0;
+  background: var(--white); border: var(--line) solid var(--ink); border-radius: 28px;
+  box-shadow: var(--lift-xl); overflow: hidden;
+}
+
+.card__cover {
+  position: relative; height: 150px; flex: none; overflow: hidden;
+  background: var(--d-wash); border-bottom: var(--line) solid var(--ink);
+}
+.card__cover .cover__svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.card__badge {
+  position: absolute; left: 22px; top: 22px;
+  width: 64px; height: 64px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--white); border: var(--line) solid var(--ink); border-radius: 20px;
+  color: var(--ink); transform: rotate(var(--tilt, -6deg));
+}
+.card__status, .cmp {
+  position: absolute; bottom: 16px; height: 32px; box-sizing: border-box;
+  display: inline-flex; align-items: center;
+  border: 2px solid var(--ink); border-radius: 999px;
+  font: 900 13px var(--f-body); color: var(--ink); white-space: nowrap;
+}
+.card__status { left: 22px; padding: 0 12px; }
+.card__status--open { background: #a6d94a; }
+.card__status--soon { background: var(--sun); }
+.card__status--later { background: var(--white); }
+
+.fav {
+  position: absolute; right: 18px; top: 18px;
+  width: 44px; height: 44px; padding: 0; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--white); border: var(--line) solid var(--ink); border-radius: 999px;
+  color: var(--ink); cursor: pointer;
+}
+.fav:hover { background: var(--paper); }
+.fav:active { transform: scale(.92); }
+.fav[aria-pressed='true'] { background: var(--coral); }
+.fav[aria-pressed='true'] .ic { fill: var(--ink); }
+
+/* «Сравнить» — пилюля на обложке: рядом с сердцем, потому что это тоже
+   «отложить группу», только на эту минуту, а не надолго. */
+.cmp { right: 18px; gap: 7px; padding: 0 12px 0 9px; background: var(--white); cursor: pointer; }
+.cmp:hover { background: var(--paper); }
+.cmp input { width: 16px; height: 16px; margin: 0; accent-color: var(--ink); cursor: pointer; }
+.cmp:has(input:checked) { background: var(--ink); color: var(--white); }
+.cmp:has(input:checked) input { accent-color: var(--sun); }
+.cmp:has(input:focus-visible) { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+.card__body { flex: 1 1 auto; display: flex; flex-direction: column; gap: 14px; padding: 22px 24px 24px; }
+.card__head { display: flex; flex-direction: column; gap: 4px; }
+.card__title { margin: 0; font: 700 21px/1.25 var(--f-disp); letter-spacing: 0; }
+.card__title a { color: inherit; text-decoration: none; }
+.card__title a:hover { text-decoration: underline; text-decoration-color: var(--coral); }
+.card__subtype { font: 700 14px var(--f-body); color: #6f6590; }
+.card__org { margin: 0; font: 700 15px var(--f-body); }
+
+.card__pills { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { padding: 6px 12px; border-radius: 999px; font: 800 14px/1.3 var(--f-body); font-variant-numeric: tabular-nums; }
+.pill--age { background: #ffd3e4; }
+.pill--when { background: #bff0dc; }
+.pill--metro { background: #cde8ff; }
+.pill--dist { background: var(--lilac-soft); }
+
+.card__addr, .card__meta { margin: 0; font: 700 14px/1.4 var(--f-body); color: #6f6590; }
+.card__meta { margin-top: -4px; }
+
+/* сколько лет ребёнок ещё проходит в группе — обещание шага 1 */
+.age { list-style: none; margin: 0; padding: 12px 14px; display: grid; gap: 6px; background: #fff1f6; border-radius: 16px; }
+.age__row { display: flex; flex-wrap: wrap; gap: 2px 10px; font: 700 14px/1.35 var(--f-body); }
+.age__who { font-weight: 900; }
+/* ±1 год — мягкая граница, решает звонок в центр: полый маркер вместо цвета */
+.age__who::before {
+  content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 7px;
+  border-radius: 2px; background: var(--ink); vertical-align: 1px;
+}
+.age__row--near .age__who::before { background: none; box-shadow: inset 0 0 0 1.5px #6f6590; }
+.age__row--near { color: #6f6590; }
+
+/* занятие на шкале дня — та же графика, что в сетке шага 2 */
+.lessons { list-style: none; margin: 0; padding: 12px 14px; display: grid; gap: 6px; background: #eefaf5; border-radius: 16px; }
+.lesson { display: grid; grid-template-columns: 24px 96px minmax(40px, 1fr); align-items: center; gap: 4px 8px; font: 700 14px var(--f-body); }
+.lesson__day { color: #6f6590; }
+.lesson__time { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lesson__track {
+  position: relative; display: block; height: 14px;
+  background: var(--white); border: 1.5px solid var(--ink); border-radius: 999px; overflow: hidden;
+}
+.lesson__win { position: absolute; top: 0; bottom: 0; background: #9fe6cf; }
+.lesson__bar { position: absolute; top: 2px; bottom: 2px; border-radius: 999px; background: #6f6590; }
+.lesson--fits .lesson__bar { background: var(--ink); }
+.lesson--misses .lesson__bar { background: var(--sun); box-shadow: 0 0 0 1.5px var(--ink); }
+.lesson__note { grid-column: 3; font-size: 12px; color: #8a5c00; }
+.lesson__note:empty { display: none; }
+.lesson--misses .lesson__day, .lesson--misses .lesson__time { color: #6f6590; }
+.fitline { margin: -6px 0 0; font: 800 14px var(--f-body); color: #8a5c00; }
+.fitline--all { color: #1f7a5c; }
+
+.card__foot {
+  margin-top: auto; padding-top: 14px; border-top: 2px dashed #e4dccb;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+}
+.card__price { margin: 0; font: 700 15px var(--f-body); }
+.card__sum { font: 700 20px var(--f-disp); font-variant-numeric: tabular-nums; }
+.card__single { display: block; margin-top: 2px; font: 700 13px var(--f-body); color: #6f6590; }
+.card__go {
+  height: 46px; padding: 0 18px; box-sizing: border-box;
+  display: inline-flex; align-items: center;
+  background: var(--coral); color: var(--ink); text-decoration: none;
+  border: var(--line) solid var(--ink); border-radius: 14px; box-shadow: var(--lift-s);
+  font: 900 15px var(--f-body);
+}
+.card__go:hover { background: var(--coral-hot); }
+.card__go:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+
+/* ── «Показать ещё» ──────────────────────────────────────────────────────── */
+
+.more {
+  margin: 36px auto 0; height: 58px; padding: 0 36px; box-sizing: border-box;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--white); border: var(--line) solid var(--ink); border-radius: 999px; box-shadow: var(--lift-m);
+  font: 900 18px var(--f-body); color: var(--ink); cursor: pointer;
+}
+.more:hover { background: var(--paper); }
+.more:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+.more .ic { pointer-events: none; }
+
+/* ── заголовки разделов выдачи ───────────────────────────────────────────── */
+
+.group-head { margin: 0 0 20px; display: flex; flex-direction: column; gap: 6px; }
+.group-head + .cards { margin-top: 0; }
+.togs + .group-head { margin-top: 48px; }
+.group-head h2 { margin: 0; font: 700 26px/1.25 var(--f-disp); }
+.group-head p { margin: 0; max-width: 62ch; font: 700 16px/1.45 var(--f-body); color: #6f6590; }
+.group-head__n {
+  display: inline-block; margin-left: 6px; padding: 2px 12px; border-radius: 999px; vertical-align: 4px;
+  background: var(--ink); color: var(--white); font: 600 16px/1.5 var(--f-disp); font-variant-numeric: tabular-nums;
+}
+.almost__t .group-head__n { margin-left: 0; vertical-align: 0; }
+
+/* ── обоих сразу ─────────────────────────────────────────────────────────── */
+
+.togs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.tog {
+  display: flex; flex-direction: column; gap: 12px;
+  background: #eefaf5; border: var(--line) solid var(--ink); border-radius: 24px; box-shadow: var(--lift-m);
+  padding: 20px 22px;
+}
+.tog__head { margin: 0; display: flex; flex-direction: column; gap: 2px; font: 700 19px/1.25 var(--f-disp); }
+.tog__where { font: 700 14px var(--f-body); color: #6f6590; }
+.tog__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.tog__list li {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+  padding: 10px 12px; background: var(--white); border: 2px solid var(--ink); border-radius: 14px;
+  font: 700 15px var(--f-body);
+}
+.tog__who { min-width: 5.5rem; font-weight: 900; }
+.tog__list .dot { display: inline-block; }
+.tog__list a { font-weight: 900; }
+.tog__when { color: #6f6590; font-variant-numeric: tabular-nums; }
+.tog__list .num { margin-left: auto; font: 700 15px var(--f-disp); }
+.tog__sum { margin: 0; padding-top: 12px; border-top: 2px dashed #b9e3d3; font: 700 15px/1.45 var(--f-body); }
+.tog__sum .num { font: 700 15px var(--f-disp); }
+
+/* ── почти подходит ──────────────────────────────────────────────────────── */
+
+.almost { margin-top: 56px; }
+.almost__head {
+  list-style: none; cursor: pointer;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px;
+  padding: 18px 22px; background: var(--white);
+  border: var(--line) dashed var(--ink); border-radius: 22px;
+}
+.almost__head::-webkit-details-marker { display: none; }
+.almost__head:hover { background: var(--paper); }
+.almost__t { display: flex; align-items: center; gap: 10px; }
+.almost__h { font: 700 22px var(--f-disp); }
+.almost__why { font: 700 15px var(--f-body); color: #6f6590; }
+.almost__head .ic { margin-left: auto; transition: transform .15s ease-out; }
+.almost[open] .almost__head .ic { transform: rotate(180deg); }
+.almost__body { margin-top: 24px; }
+/* Те же карточки, но с пунктирной обводкой и без тени: это мягкая граница,
+   решает звонок в центр, а не наш фильтр. */
+.almost .card { border-style: dashed; box-shadow: none; }
+
+/* ── ничего не нашлось ───────────────────────────────────────────────────── */
+
+/* Рисунок слева, текст и подсказки справа: во всю ширину строка подсказки
+   растягивалась бы на 1200 px, а справа оставалась пустота. */
+.empty {
+  display: grid; grid-template-columns: 140px minmax(0, 1fr); column-gap: 36px; align-items: start;
+  background: var(--white); border: var(--line) solid var(--ink); border-radius: 28px;
+  box-shadow: var(--lift-xl); padding: 32px;
+}
+.empty .art { grid-row: 1 / span 6; width: 140px; height: auto; margin: 6px 0 0; color: var(--ink); }
+.empty > :not(.art) { grid-column: 2; }
+.empty .btn { justify-self: start; }
+.empty h2 { margin: 0 0 8px; font: 700 28px/1.2 var(--f-disp); }
+.empty p { margin: 0 0 18px; max-width: 62ch; font: 700 16px/1.45 var(--f-body); color: #6f6590; }
+.fix { list-style: none; margin: 0; padding: 0; width: 100%; max-width: 720px; display: grid; gap: 12px; }
+.fix__btn {
+  width: 100%; min-height: 56px; box-sizing: border-box;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px;
+  padding: 12px 16px 12px 20px; text-align: left;
+  background: var(--paper); border: var(--line) solid var(--ink); border-radius: 16px; box-shadow: var(--lift-s);
+  font: 800 16px var(--f-body); color: var(--ink); cursor: pointer;
+}
+.fix__btn:hover { background: var(--sun-soft); }
+.fix__count {
+  margin-left: auto; padding: 4px 12px; border-radius: 999px;
+  background: var(--ink); color: var(--white); font: 600 14px var(--f-disp); white-space: nowrap;
+}
+
+/* ── сравнение ───────────────────────────────────────────────────────────── */
+
+.cmpbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  padding: 12px var(--edge-x) calc(12px + env(safe-area-inset-bottom));
+  background: var(--ink); color: var(--white);
+}
+.cmpbar__txt { margin: 0; font: 800 16px var(--f-body); }
+.cmpbar > div { margin-left: auto; display: flex; gap: 10px; }
+.cmpbar .btn {
+  height: 46px; padding: 0 18px; border-radius: 14px;
+  background: var(--sun); border-color: var(--white); box-shadow: none; font-size: 15px;
+}
+.cmpbar .btn--quiet { background: transparent; color: var(--white); }
+.cmpbar .btn:disabled { opacity: .5; cursor: default; }
+/* На телефоне полоса «Фильтры» тоже внизу — сравнение встаёт над ней. */
+@media (max-width: 63.99rem) {
+  body:has(.mobilebar[data-away='1']) .cmpbar { bottom: calc(72px + env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; }
+}
+
+.cmpdlg {
+  width: min(64rem, 100% - 32px); max-width: none; padding: 0;
+  background: var(--white); color: var(--ink);
+  border: var(--line) solid var(--ink); border-radius: 28px; box-shadow: var(--lift-xl);
+}
+.cmpdlg::backdrop { background: rgba(42, 30, 74, .45); }
+.cmpdlg__in { padding: 24px; }
+.cmpdlg__head { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.cmpdlg__head h2 { margin: 0; font: 700 26px var(--f-disp); }
+.cmpdlg__head .btn { margin-left: auto; height: 44px; padding: 0 16px; border-radius: 14px; font-size: 15px; }
+.cmpdlg__body { overflow-x: auto; }
+.cmptab { width: 100%; border-collapse: collapse; font: 700 15px/1.4 var(--f-body); }
+.cmptab th, .cmptab td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 2px dashed #e4dccb; }
+.cmptab thead th { border-top: 0; font: 700 16px/1.3 var(--f-disp); }
+.cmptab thead a { color: inherit; text-decoration-color: var(--coral); }
+.cmptab th[scope='row'] { color: #6f6590; font-weight: 800; white-space: nowrap; }
+.cmptab .num { font-family: var(--f-disp); font-variant-numeric: tabular-nums; }
+
+.noscript {
+  margin-top: 28px; padding: 20px 24px;
+  background: var(--white); border: var(--line) solid var(--ink); border-radius: 22px;
+  font: 700 16px/1.5 var(--f-body);
+}
+
+/* ── ширины ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 1199px) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+}
+@media (max-width: 899px) {
+  .togs { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 63.99rem) {
+  .res { padding-top: 48px; }
+  .res__tools { margin-left: 0; flex-basis: 100%; }
+}
+@media (max-width: 699px) {
+  .cards { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  /* «Обоих сразу» на телефоне — лентой, как витрина направлений: восемь
+     вариантов столбиком отодвигали общий список на несколько экранов. */
+  .togs {
+    display: flex; gap: 14px;
+    margin-inline: calc(var(--edge-x) * -1); padding: 4px var(--edge-x) 12px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--edge-x);
+    scrollbar-width: none;
+  }
+  .togs::-webkit-scrollbar { display: none; }
+  .tog { flex: 0 0 min(86%, 340px); scroll-snap-align: start; }
+}
+@media (max-width: 599px) {
+  .res { padding-top: 36px; }
+  .res__n { font-size: 40px; }
+  .res__w { font-size: 20px; }
+  .res .sortbox { flex: 1 1 100%; }
+  .res .sortbox select { flex: 1; min-width: 0; }
+  .res__btn { flex: 1 1 auto; justify-content: center; }
+
+  /* Обложка ниже, но всё на ней остаётся: статус, сердце и «Сравнить». */
+  .card { border-radius: 24px; box-shadow: var(--lift-m); }
+  .card__cover { height: 118px; }
+  .card__badge { left: 16px; top: 14px; width: 52px; height: 52px; border-radius: 16px; }
+  .card__badge .ic { width: 30px; height: 30px; }
+  .card__status { left: 16px; bottom: 12px; }
+  .cmp { right: 14px; bottom: 12px; }
+  .fav { right: 14px; top: 14px; }
+  .card__body { padding: 18px 18px 20px; gap: 12px; }
+  .card__title { font-size: 19px; }
+
+  .group-head h2 { font-size: 22px; }
+  .tog { padding: 16px; }
+  .almost__head { padding: 14px 16px; }
+  .almost__h { font-size: 19px; }
+  .empty { display: flex; flex-direction: column; align-items: flex-start; padding: 22px 18px; box-shadow: var(--lift-m); }
+  .empty .art { width: 110px; margin-bottom: 14px; }
+  .empty h2 { font-size: 23px; }
+  .more { width: 100%; justify-content: center; }
 }

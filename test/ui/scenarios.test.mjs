@@ -385,3 +385,23 @@ test('ползунок возраста: стрелками меняет воз�
   noErrors(page);
   await page.close();
 });
+
+/* ── 10. показать ещё ────────────────────────────────────────────────────── */
+
+// Новое в редизайне: выдача идёт страницами по 12 карточек (четыре ряда по
+// три), а не по 30. Кнопка обещает число и добавляет ровно столько.
+test('показать ещё: кнопка обещает число и добавляет ровно столько карточек', async () => {
+  const page = await open('/');
+  const total = await count(page);
+  const cards = `__ui.all('article').filter((a) => a.querySelector('h3')).length`;
+  const before = await page.eval(cards);
+  assert.ok(before > 0 && before < total, 'первая страница должна быть неполной');
+
+  const more = button('^показать ещё');
+  const promised = await page.eval(`Number((${more}).textContent.match(/(\\d+)/)[1])`);
+  await page.click(more, 'кнопка «Показать ещё»');
+  await page.waitFor(`${cards} === ${before + promised}`, { what: `${before + promised} карточек` });
+  assert.equal(await count(page), total, 'счётчик не должен меняться');
+  noErrors(page);
+  await page.close();
+});

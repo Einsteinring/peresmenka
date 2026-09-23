@@ -3,7 +3,7 @@
 // так карточка в выдаче и карточка на SEO-странице не могут разойтись.
 
 import { ageNote, GRID } from './model.js';
-import { coverSvg, dirIcon } from './visual.js';
+import { cardCover, cardTilt, dirIcon } from './visual.js';
 import {
   DAY_SHORT, distance, groupsWord, intake, lessonsWord, plural, price, span, time, yearsWord
 } from './format.js';
@@ -70,10 +70,9 @@ function lessonsBlock(match, group, windows = []) {
 
 /* ── возраст ─────────────────────────────────────────────────────────────── */
 
+// Диапазон группы — в пилюле; здесь то, что обещано в шаге 1: сколько лет
+// каждый ребёнок ещё проходит в этой группе.
 function ageBlock(group, children, match) {
-  if (!children || !children.length) {
-    return `<p class="age age--plain">Возраст ${group.ageFrom}—${group.ageTo} ${plural(group.ageTo, 'год', 'года', 'лет')}</p>`;
-  }
   const rows = children.map((child, i) => {
     const note = ageNote(group, child.age);
     const label = child.name ? `${esc(child.name)}, ${child.age}` : `${child.age} ${plural(child.age, 'год', 'года', 'лет')}`;
@@ -86,18 +85,48 @@ function ageBlock(group, children, match) {
 
 /* ── карточка ────────────────────────────────────────────────────────────── */
 
+// Сердце — из эталона.
 const HEART =
   '<svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-  'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-  '<path d="M12 20s-7-4.6-7-9.5A4.5 4.5 0 0 1 12 8a4.5 4.5 0 0 1 7 2.5C19 15.4 12 20 12 20z"/></svg>';
+  'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>';
+
+const NBSP = ' ';
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const thousands = (v) => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
+
+// Расписание пилюлями, как в эталоне: «Вт, Чт · 17:30–19:00». Занятия с
+// одинаковым временем сливаются в одну пилюлю, с разным — в соседние.
+function scheduleSlots(lessons) {
+  const slots = new Map();
+  for (const l of [...lessons].sort((a, b) => a.day - b.day || a.start - b.start)) {
+    const key = `${l.start}-${l.end}`;
+    if (!slots.has(key)) slots.set(key, { start: l.start, end: l.end, days: [] });
+    slots.get(key).days.push(l.day);
+  }
+  return [...slots.values()].map((s) => `${s.days.map((d) => cap(DAY_SHORT[d])).join(', ')} · ${time(s.start)}–${time(s.end)}`);
+}
+
+// Статус набора — из того же intake(), что и всё остальное про набор:
+// второго источника правды о наборе в проекте нет. «Мало мест» не пишем —
+// этого каталог не знает.
+function intakePill(start) {
+  if (start.days <= 0) return { text: 'Набор открыт', kind: 'open' };
+  if (start.days === 1) return { text: 'Старт завтра', kind: 'soon' };
+  if (start.days <= 30) return { text: `Старт через ${start.days} ${plural(start.days, 'день', 'дня', 'дней')}`, kind: start.urgent ? 'soon' : 'later' };
+  return { text: cap(start.text), kind: 'later' };
+}
 
 export function groupCard(item, opts = {}) {
   const g = item.group || item;
   const match = item.match || null;
   const children = opts.children || [];
+  const windows = opts.windows || [];
   const now = opts.now || new Date();
   const start = intake(g.intakeStart, now);
+  const status = intakePill(start);
   const dist = match && match.distance != null ? distance(match.distance) : null;
+  const tools = opts.compare !== false;
 
   const subtype = g.subtype ? ` <span class="card__subtype">${esc(g.subtype)}</span>` : '';
   const trial = g.trial.has
@@ -106,54 +135,42 @@ export function groupCard(item, opts = {}) {
       : `пробное ${price(g.priceSingle)}`
     : 'без пробного';
 
-  // Пилюля статуса берёт дни из того же intake(), что и строка «Набор» ниже:
-  // второго источника правды о наборе в проекте нет.
-  const pill = start.days <= 0
-    ? 'набор открыт'
-    : start.days === 1
-      ? 'старт завтра'
-      : start.days <= 30
-        ? `старт через ${start.days} ${plural(start.days, 'день', 'дня', 'дней')}`
-        : start.text;
+  // Когда окно задано, расписание показывает полоса занятия на шкале дня —
+  // она говорит больше пилюли: не только когда, но и на сколько вылезает.
+  // Пилюли с тем же временем рядом с ней были бы повтором.
+  const withWindows = windows.length > 0 && match;
+  const pills = [
+    `<li class="pill pill--age">${g.ageFrom}–${g.ageTo}${NBSP}${plural(g.ageTo, 'год', 'года', 'лет')}</li>`,
+    ...(withWindows ? [] : scheduleSlots(g.lessons).map((s) => `<li class="pill pill--when">${s}</li>`)),
+    `<li class="pill pill--metro">м.${NBSP}${esc(g.branch.stationName)}</li>`,
+    dist ? `<li class="pill pill--dist">${dist} по${NBSP}прямой</li>` : ''
+  ].join('');
 
   return `<article class="card" data-dir="${esc(g.direction)}"${opts.id ? ` id="${esc(opts.id)}"` : ''}>
-  <div class="card__cover">${coverSvg(g, 240, 150)}
-    <span class="card__badge">${dirIcon(g.direction, 20)}</span>
-    <span class="card__status${start.urgent ? ' card__status--soon' : ''}">${esc(pill)}</span>
-    ${opts.compare === false ? '' : `<button type="button" class="fav" data-follow="${g.id}" aria-pressed="false" aria-label="Отслеживать группу">${HEART}</button>`}
+  <div class="card__cover">${cardCover(g)}
+    <span class="card__badge" style="--tilt:${cardTilt(g)}deg">${dirIcon(g.direction, 36)}</span>
+    <span class="card__status card__status--${status.kind}">${esc(status.text)}</span>
+    ${tools ? `<button type="button" class="fav" data-follow="${g.id}" aria-pressed="false" aria-label="Отслеживать группу">${HEART}</button>
+    <label class="cmp"><input type="checkbox" class="cmp__box" value="${g.id}"${opts.compared ? ' checked' : ''}> Сравнить</label>` : ''}
   </div>
   <div class="card__body">
-  <div class="card__head">
-    <h3 class="card__title"><a href="${groupUrl(g)}">${esc(g.dir.short)}: ${esc(g.title)}</a>${subtype}</h3>
-    <p class="card__org">${esc(g.org.name)}</p>
-  </div>
+    <div class="card__head">
+      <h3 class="card__title"><a href="${groupUrl(g)}">${esc(g.dir.short)}: ${esc(g.title)}</a>${subtype}</h3>
+      <p class="card__org">${esc(g.org.name)}</p>
+    </div>
 
-  <p class="card__place">
-    <span class="card__address">${esc(g.branch.address)}</span>
-    <span class="card__metro">${esc(g.branch.stationName)}, ${distance(g.branch.metroDistance)} до метро</span>
-    ${dist ? `<span class="card__dist">${dist} по прямой</span>` : ''}
-  </p>
+    <ul class="card__pills">${pills}</ul>
+    <p class="card__addr">${esc(g.branch.address)} · ${distance(g.branch.metroDistance)} до метро</p>
 
-  ${ageBlock(g, children, match)}
-  ${lessonsBlock(match, g, opts.windows || [])}
+    ${children.length ? ageBlock(g, children, match) : ''}
+    ${withWindows ? lessonsBlock(match, g, windows) : ''}
 
-  <dl class="card__facts">
-    <div><dt>В месяц</dt><dd class="num">${price(g.priceMonth)}</dd></div>
-    <div><dt>Разово</dt><dd class="num">${price(g.priceSingle)}</dd></div>
-    <div><dt>Набор</dt><dd${start.urgent ? ' class="urgent"' : ''}>${start.text}</dd></div>
-    <div><dt>Уровень</dt><dd>${g.level === 'start' ? 'с нуля' : 'продолжающие'}</dd></div>
-  </dl>
+    <p class="card__meta">${g.level === 'start' ? 'С нуля' : 'Для продолжающих'} · до ${g.groupSize} ${plural(g.groupSize, 'человека', 'человек', 'человек')} в группе · ${trial}</p>
 
-  <p class="card__tail">
-    <span>${trial}</span>
-    <span>до ${g.groupSize} ${plural(g.groupSize, 'человека', 'человек', 'человек')} в группе</span>
-    <span>${esc(g.teacher.name)}</span>
-  </p>
-
-  ${opts.compare === false ? '' : `<div class="card__actions">
-    <a class="btn" href="${groupUrl(g)}">Подробно и запись</a>
-    <label class="cmp"><input type="checkbox" class="cmp__box" value="${g.id}"${opts.compared ? ' checked' : ''}> Сравнить</label>
-  </div>`}
+    <div class="card__foot">
+      <p class="card__price"><span class="card__sum">${thousands(g.priceMonth)}</span> ₽/мес<span class="card__single">разово ${price(g.priceSingle)}</span></p>
+      ${tools ? `<a class="card__go" href="${groupUrl(g)}">Подробнее</a>` : ''}
+    </div>
   </div>
 </article>`;
 }

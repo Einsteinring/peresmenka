@@ -15,7 +15,8 @@ import { describeQuery } from './describe.js';
 import { loginPanel, mountTopbar } from './topbar.js';
 
 const $ = (id) => document.getElementById(id);
-const PAGE = 30;
+// Четыре ряда по три карточки: дальше — «Показать ещё».
+const PAGE = 12;
 
 let index = null;
 let lastTotal = 0;
@@ -75,6 +76,12 @@ async function boot() {
 
 /* ── сохранить поиск и отслеживать группу ────────────────────────────────── */
 
+// Закладка — из эталона.
+const BOOKMARK = '<svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
+  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+const CHEVRON = '<svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" ' +
+  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+
 // Гостю ничего не запрещается: панель с объяснением раскрывается под панелью
 // результатов, поиск продолжает работать.
 let followed = null;
@@ -89,7 +96,7 @@ function offerLogin(reason) {
 
 function mountSaveBar() {
   const bar = $('savebar');
-  bar.innerHTML = '<button type="button" class="btn btn--gold" id="save-search">Сохранить поиск</button><span class="savebar__msg" id="save-msg"></span>';
+  bar.innerHTML = `<button type="button" class="res__btn res__btn--save" id="save-search">${BOOKMARK}Сохранить поиск</button>`;
   $('save-search').addEventListener('click', async () => {
     const search = queryToSearch(q);
     if (!search) {
@@ -585,9 +592,10 @@ function renderAll() {
   const parts = [];
 
   lastTotal = res.total;
+  // «310 групп нашлось», как в эталоне, — с согласованием глагола.
   $('count').innerHTML = res.total
-    ? `<span class="num">${res.total}</span> ${plural(res.total, 'группа', 'группы', 'групп')}`
-    : 'Ничего не нашлось';
+    ? `<span class="res__n">${res.total}</span> <span class="res__w">${plural(res.total, 'группа нашлась', 'группы нашлись', 'групп нашлось')}</span>`
+    : '<span class="res__w">Ничего не нашлось</span>';
   $('mobile-count').textContent = String(res.total);
   $('apply-count').textContent = res.total
     ? `${res.total} ${plural(res.total, 'группу', 'группы', 'групп')}`
@@ -603,10 +611,10 @@ function renderAll() {
       if (together.length) {
         hasTogether = true;
         parts.push(`<div class="group-head">
-          <h2>Обоих в одно время и в одном месте — ${together.length}</h2>
+          <h2>Обоих в одно время и в одном месте <span class="group-head__n">${together.length}</span></h2>
           <p>Одна поездка вместо двух: либо группа берёт обоих, либо занятия идут параллельно в одном филиале.</p>
         </div>`);
-        parts.push(together.map((v) => togetherCard(v, q.children)).join(''));
+        parts.push(`<div class="togs">${together.map((v) => togetherCard(v, q.children)).join('')}</div>`);
       }
     }
 
@@ -614,17 +622,17 @@ function renderAll() {
     // Заголовок нужен только чтобы отделить общий список от блока «обоих
     // сразу»; иначе он повторяет счётчик в липкой панели.
     if (hasTogether) parts.push('<div class="group-head"><h2>Все подходящие группы</h2></div>');
-    parts.push(page.map((it) => groupCard(it, { children: q.children, windows: q.windows, compared: compare.has(it.group.id) })).join(''));
+    parts.push(`<div class="cards">${page.map((it) => groupCard(it, { children: q.children, windows: q.windows, compared: compare.has(it.group.id) })).join('')}</div>`);
     if (res.items.length > shown) {
-      parts.push(`<button type="button" class="btn btn--quiet more" id="more">Показать ещё ${Math.min(PAGE, res.items.length - shown)}</button>`);
+      parts.push(`<button type="button" class="more" id="more">Показать ещё ${Math.min(PAGE, res.items.length - shown)}${CHEVRON}</button>`);
     }
   }
 
   if (res.almost.length) {
     parts.push(`<details class="almost"${res.total ? '' : ' open'}>
-      <summary class="group-head"><h2 style="display:inline">Почти подходит — ${res.almost.length}</h2>
-      <p>Ребёнок младше или старше на год. Часто берут, если позвонить.</p></summary>
-      <div class="almost__body">${res.almost
+      <summary class="almost__head"><span class="almost__t"><span class="almost__h">Почти подходит</span> <span class="group-head__n">${res.almost.length}</span></span>
+      <span class="almost__why">Ребёнок младше или старше на год. Часто берут, если позвонить.</span>${CHEVRON}</summary>
+      <div class="cards almost__body">${res.almost
         .slice(0, 20)
         .map((it) => groupCard(it, { children: q.children, windows: q.windows, compared: compare.has(it.group.id) }))
         .join('')}</div>
@@ -673,9 +681,13 @@ function onResultsClick(e) {
     if (s) apply(s.patch);
     return;
   }
-  if (e.target.id === 'more') {
+  if (e.target.closest('#more')) {
+    const first = shown;
     shown += PAGE;
     renderAll();
+    // Список перерисован целиком, и фокус с исчезнувшей кнопки упал бы
+    // в начало страницы. Ставим его на первую новую карточку.
+    $('results').querySelectorAll('.card__title a')[first]?.focus();
     return;
   }
   if (e.target.id === 'reset2') apply(emptyQuery());

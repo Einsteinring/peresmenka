@@ -177,10 +177,10 @@
   </form>
 </section>
 
-<section id="gruppy" class="wrap">
-  <div class="bar" id="bar">
-    <p class="bar__count" id="count" aria-live="polite" role="status">&nbsp;</p>
-    <div class="bar__right">
+<section id="gruppy" class="res shell" aria-labelledby="res-t">
+  <div class="res__bar" id="bar">
+    <h2 class="res__t" id="res-t"><span id="count" role="status" aria-live="polite">&nbsp;</span></h2>
+    <div class="res__tools">
       <label class="sortbox">Сортировка
         <select id="sort">
           <option value="match">по совпадению</option>
@@ -189,11 +189,13 @@
           <option value="intake">по дате набора</option>
         </select>
       </label>
-      <label class="strictbox"><input type="checkbox" id="strict"> все занятия в окне</label>
-      <button type="button" class="btn btn--quiet" id="reset">Сбросить</button>
+      <button type="button" class="res__btn" id="reset">Сбросить</button>
+      <div class="savebar" id="savebar"></div>
     </div>
-    <div class="savebar" id="savebar"></div>
+    <!-- Появляется, только когда окно задано: без окна правилу не к чему применяться. -->
+    <label class="strictbox"><input type="checkbox" id="strict"> Все занятия группы — в моём окне</label>
   </div>
+  <p class="res__msg" id="save-msg" aria-live="polite"></p>
 
   <div id="saveslot"></div>
 

@@ -120,12 +120,46 @@ for (const [w, h] of [[390, 844], [360, 740]]) {
   writeFileSync(join(OUT, 'site-390-sheet-3.png'), await p.shotViewport());
 }
 
+// ── ноутбуки: 1366 и 1280, верх страницы до конца витрины ──
+// Кроме того, что есть сейчас, — варианты полей для девяти колонок. Они
+// навязываются стилем поверх site.css, чтобы решить по картинке; в сам
+// site.css попадёт только выбранный.
+const NINE = '.dtiles{grid-template-columns:repeat(9,minmax(0,1fr))}' +
+  '.dtiles .tile{padding:16px 13px}.dtiles .tile__name--long{font-size:13px;letter-spacing:-0.4px}';
+const LAPTOPS = [
+  [1366, 'now', ''],
+  [1366, 'edge40', ':root{--edge-x:40px}' + NINE],
+  [1280, 'now', ''],
+  [1280, 'edge40-tight', ':root{--edge-x:40px}' + NINE + '.dtiles{gap:12px}.dtiles .tile{padding:16px 10px}'],
+];
+const laptops = [];
+for (const [w, key, css] of LAPTOPS) {
+  const p = await browser.open(`${site.origin}/`, { width: w, height: 1400 });
+  await p.waitFor('document.querySelectorAll(".tile").length === 9 && document.fonts.status === "loaded"');
+  if (css) await p.eval(`document.head.append(Object.assign(document.createElement('style'), { textContent: ${JSON.stringify(css)} }))`);
+  const facts = await p.eval(`(() => {
+    const tiles = [...document.querySelectorAll('.tile')];
+    const rows = new Set(tiles.map((t) => Math.round(t.offsetTop))).size;
+    // Строки имени — по разным верхам прямоугольников текста.
+    const lines = (n) => { const r = document.createRange(); r.selectNodeContents(n);
+      return new Set([...r.getClientRects()].map((q) => Math.round(q.top))).size; };
+    const broken = tiles.map((t) => t.querySelector('.tile__name')).filter((n) => lines(n) > 1)
+      .map((n) => n.textContent.replace(/\\u00ad/g, ''));
+    return { rows, broken, overflow: document.documentElement.scrollWidth - innerWidth };
+  })()`);
+  const end = await p.eval(`${bottom('#napravleniya')} + 24`);
+  const file = `site-${w}-${key}.png`;
+  writeFileSync(join(OUT, file), await p.shot(0, end, w));
+  laptops.push({ w, key, file, ...facts });
+  await p.close();
+}
+
 const tilesSpill1440 = await mine.eval(`[...document.querySelectorAll('.tile')].filter((t) => {
   const n = t.querySelector('.tile__name'); return n.scrollWidth > n.clientWidth + 1;
 }).map((t) => t.querySelector('.tile__name').textContent)`);
 
-writeFileSync(join(OUT, 'shots.json'), JSON.stringify({ refShots, mineShots, phones, tilesSpill1440 }, null, 2));
-console.log(JSON.stringify({ refB, mineB, phones, tilesSpill1440 }, null, 2));
+writeFileSync(join(OUT, 'shots.json'), JSON.stringify({ refShots, mineShots, phones, laptops, tilesSpill1440 }, null, 2));
+console.log(JSON.stringify({ refB, mineB, phones, laptops, tilesSpill1440 }, null, 2));
 
 await browser.stop();
 site.stop();

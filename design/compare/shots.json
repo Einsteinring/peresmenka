@@ -49,5 +49,39 @@
       "spill": []
     }
   ],
+  "laptops": [
+    {
+      "w": 1366,
+      "key": "now",
+      "file": "site-1366-now.png",
+      "rows": 2,
+      "broken": [],
+      "overflow": 0
+    },
+    {
+      "w": 1366,
+      "key": "edge40",
+      "file": "site-1366-edge40.png",
+      "rows": 1,
+      "broken": [],
+      "overflow": 0
+    },
+    {
+      "w": 1280,
+      "key": "now",
+      "file": "site-1280-now.png",
+      "rows": 2,
+      "broken": [],
+      "overflow": 0
+    },
+    {
+      "w": 1280,
+      "key": "edge40-tight",
+      "file": "site-1280-edge40-tight.png",
+      "rows": 1,
+      "broken": [],
+      "overflow": 0
+    }
+  ],
   "tilesSpill1440": []
 }

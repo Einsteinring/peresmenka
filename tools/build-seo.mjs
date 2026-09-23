@@ -111,11 +111,13 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script
 
 <header class="top">
   <div class="top__in">
-    <a class="mark" href="/">Пересменка</a>
-    <p class="top__demo">Демонстрационный каталог. Организации, педагоги, адреса занятий и расписание вымышлены; районы и станции метро настоящие.</p>
+    <a class="mark" href="/"><span class="mark__badge" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none"><rect x="1.5" y="1.5" width="25" height="25" rx="8" fill="#ffc93c" stroke="#2a1e4a" stroke-width="2.5"/><circle cx="14" cy="14" r="6" stroke="#2a1e4a" stroke-width="2.5"/><circle cx="14" cy="14" r="2.4" fill="#ff6b4a"/></svg></span>Пересменка</a>
+    <nav class="top__nav" aria-label="Разделы сайта"><a href="/#tiles">Направления</a><a href="/#builder">Подбор</a><a href="/#results">Все группы</a></nav>
     <div class="top__me"><a class="top__link" href="/lk/">Кабинет</a></div>
   </div>
 </header>
+
+<p class="demo-note"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>Демо-каталог: организации, педагоги, адреса и расписание вымышлены; районы и метро — настоящие.</p>
 
 <nav class="crumbs" aria-label="Хлебные крошки"><ol>${crumbHtml}</ol></nav>
 

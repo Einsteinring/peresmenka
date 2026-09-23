@@ -107,7 +107,9 @@ function paintFollowed() {
   for (const b of document.querySelectorAll('[data-follow]')) {
     const on = Boolean(followed && followed.has(b.dataset.follow));
     b.setAttribute('aria-pressed', String(on));
-    b.textContent = on ? 'Отслеживается' : 'Отслеживать';
+    // У сердца на обложке нет текста, поэтому подпись живёт в aria-label.
+    if (b.classList.contains('fav')) b.setAttribute('aria-label', on ? 'Отслеживается' : 'Отслеживать группу');
+    else b.textContent = on ? 'Отслеживается' : 'Отслеживать';
   }
 }
 
@@ -494,6 +496,7 @@ function renderAll() {
     ? `<span class="num">${res.total}</span> ${plural(res.total, 'группа', 'группы', 'групп')}`
     : 'Ничего не нашлось';
   $('mobile-count').textContent = String(res.total);
+  $('hero-count').textContent = String(res.total);
   $('apply-count').textContent = res.total
     ? `${res.total} ${plural(res.total, 'группу', 'группы', 'групп')}`
     : 'результат';

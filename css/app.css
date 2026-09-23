@@ -21,8 +21,13 @@
   --edge: #ded2c4;
   --edge-soft: #efe4d4;
 
-  --go: #ff5a3c;
-  --go-deep: #e8462a;
+  --go: #ff6b4a;
+  --go-deep: #e0492a;
+  /* Тот же коралл, но затемнённый до 4,17:1 на бумаге. Нужен там, где
+     цвет попадает в текст: #FF6B4A на #FFF8EC даёт всего 2,67:1 и не
+     проходит даже порог для крупного текста. На кнопках это не важно —
+     там коралл под чернилами, а не наоборот. */
+  --go-text: #d84420;
   --gold: #ffc93c;
   --lime: #a6d94a;
 
@@ -42,11 +47,12 @@
 
   /* Форма. Обводка и тень всегда чернилами: цветных контуров в системе нет,
      иначе девять палитр направлений начнут спорить с интерфейсом. */
-  --bw: 2px;
+  --bw: 2.5px;
   --r-card: 28px;
   --r-tile: 22px;
-  --r-btn: 14px;
-  --r-in: 12px;
+  --r-btn: 20px;
+  --r-in: 14px;
+  --r-s: 7px;
   --r-pill: 999px;
   --sh-s: 3px 3px 0 var(--ink);
   --sh-m: 4px 4px 0 var(--ink);
@@ -126,11 +132,32 @@ a:hover { text-decoration-color: currentColor; }
 
 .top { border-bottom: var(--bw) solid var(--ink); background: var(--surface); }
 .top__in {
-  max-width: var(--max); margin: 0 auto; padding: .625rem var(--gut);
-  display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; align-items: baseline;
+  max-width: var(--max); margin: 0 auto; padding: .75rem var(--gut);
+  display: flex; flex-wrap: wrap; gap: .5rem 1.75rem; align-items: center;
 }
-.mark { font-size: 1.125rem; font-weight: 800; letter-spacing: -0.01em; text-decoration: none; }
-.top__demo { margin: 0; font-size: var(--t-small); color: var(--ink-soft); max-width: 62ch; }
+.mark {
+  display: inline-flex; align-items: center; gap: .55rem;
+  font-size: 1.25rem; font-weight: 800; letter-spacing: -0.015em; text-decoration: none;
+}
+.mark__badge { display: block; flex: none; }
+.mark__badge svg { display: block; width: 2rem; height: 2rem; }
+
+.top__nav { display: flex; gap: 1.5rem; font-size: .9375rem; font-weight: 700; }
+.top__nav a { text-decoration: none; }
+.top__nav a:hover { text-decoration: underline; text-decoration-color: var(--go); }
+
+/* Плашка про вымышленные данные — не строка в шапке, а наклонённая наклейка
+   под ней: её должно быть видно, но она не часть навигации. */
+.demo-note {
+  width: min(58rem, 100% - var(--gut) * 2);
+  margin: 1.25rem auto 0; margin-inline-start: max(var(--gut), (100% - var(--max)) / 2);
+  display: flex; align-items: flex-start; gap: .6rem;
+  background: var(--amber-soft);
+  border: var(--bw) dashed var(--ink); border-radius: var(--r-tile);
+  padding: .7rem 1rem; font-size: var(--t-small);
+  transform: rotate(-0.6deg);
+}
+.demo-note .ic { flex: none; margin-top: .1rem; }
 
 /* ── заголовок ───────────────────────────────────────────────────────────── */
 
@@ -139,14 +166,26 @@ a:hover { text-decoration-color: currentColor; }
   font-weight: 800; letter-spacing: -0.03em; line-height: 1.02;
   margin: 2rem 0 .75rem; max-width: 18ch;
 }
-/* Коралловая заливка по первому слову — так в макете, и это единственное
-   место на сайте, где цвет попадает в текст. */
-.lede em { font-style: normal; color: var(--go); }
+/* Коралл по первому слову и золотая волна под ним — так в эталоне, и это
+   единственное место на сайте, где цвет попадает в текст. Волна нарисована
+   инлайновым SVG в фоне: отдельного элемента ради росчерка не нужно. */
+.lede em {
+  font-style: normal; color: var(--go-text);
+  padding-bottom: .1em;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 10' preserveAspectRatio='none'%3E%3Cpath d='M1 7q4.5-6 9-0t9 0 9 0 9 0' fill='none' stroke='%23ffc93c' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x left bottom / 2.2em .3em;
+}
+
+.hero__acts { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.5rem 0 0; }
+.btn--big {
+  display: inline-block;
+  padding: 1.05rem 1.6rem; font-size: 1.125rem; border-radius: var(--r-btn);
+}
 
 /* Рисунок в шапке живёт только там, где для него есть место: ниже 64rem
    он ничего не объясняет, а первый экран занимает целиком. */
 .hero { display: grid; gap: 1rem; }
 .hero__art { display: none; }
+.hero { margin-bottom: 3rem; }
 @media (min-width: 64rem) {
   .hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: 2rem; }
   .hero__art { display: block; }
@@ -216,7 +255,19 @@ a:hover { text-decoration-color: currentColor; }
 .panel--who { --step: #ff8fb8; }
 .panel--when { --step: #3dc9a6; }
 .panel--where { --step: #5ab0ff; }
-.panel__hint { margin: .75rem 0 0; font-size: var(--t-small); color: var(--ink-soft); }
+.panel__hint {
+  display: flex; align-items: flex-start; gap: .5rem;
+  margin: .875rem 0 0; font-size: var(--t-small); color: var(--ink);
+  background: var(--amber-soft); border-radius: 18px; padding: .7rem .875rem;
+}
+.panel__hint .ic { flex: none; margin-top: .1rem; }
+
+/* Пустой возраст в первом шаге лежит на розовой подложке — в эталоне на её
+   месте ползунок, и без подложки шаг выглядит недоделанным. */
+.panel--who .nothing-here {
+  background: #ffeef5; border-radius: 18px; padding: .875rem 1rem;
+}
+.panel--who .nothing-here .art { width: 100%; max-width: 12rem; }
 
 /* дети */
 
@@ -248,6 +299,11 @@ a:hover { text-decoration-color: currentColor; }
   cursor: pointer;
 }
 .btn:hover { background: var(--go-deep); }
+/* Числа в кнопках остаются Nunito: Unbounded тут разваливает строку.
+   Зазор у флекса тоже нельзя: текстовые узлы вокруг числа становятся
+   отдельными элементами, и слова разъезжаются. Отступ даём стрелке. */
+.btn .num { font-family: inherit; font-weight: inherit; }
+.btn .ic { display: inline-block; margin-left: .5rem; vertical-align: -0.2em; }
 .btn--quiet { background: var(--surface); color: var(--ink); }
 .btn--quiet:hover { background: var(--paper); }
 /* Золото — только «сохранить»: это не действие над каталогом, а закладка. */
@@ -311,8 +367,16 @@ a:hover { text-decoration-color: currentColor; }
 
 .grid__rule { margin: .5rem 0 .625rem; font-size: var(--t-small); color: var(--ink-soft); }
 
-.alt summary { font-size: var(--t-small); color: var(--ink-soft); cursor: pointer; }
-.alt summary::marker { color: var(--edge); }
+/* Тот же пунктир, что и у плашки с оговоркой: «ещё один способ задать
+   то же самое», а не отдельное действие. */
+.alt summary {
+  display: inline-block; list-style: none;
+  font-size: var(--t-small); font-weight: 800; color: var(--ink); cursor: pointer;
+  border: var(--bw) dashed var(--ink); border-radius: var(--r-pill);
+  padding: .4rem .9rem;
+}
+.alt summary::-webkit-details-marker { display: none; }
+.alt summary:hover { background: var(--surface); }
 .alt__body { padding-top: .625rem; display: grid; gap: .625rem; }
 .altrow { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem; font-size: var(--t-small); }
 .altrow select, .altrow input {
@@ -331,8 +395,18 @@ a:hover { text-decoration-color: currentColor; }
 
 /* ── география ───────────────────────────────────────────────────────────── */
 
-.modes { display: grid; gap: .25rem; margin-bottom: .75rem; }
-.mode { display: flex; align-items: center; gap: .45rem; font-size: var(--t-small); cursor: pointer; }
+/* Четыре режима — четыре пилюли во всю ширину: в эталоне это ряд кнопок,
+   и выбранная заливается. Радиокнопка остаётся настоящей, её видно
+   и клавиатуре, и скринридеру. */
+.modes { display: grid; gap: .4rem; margin-bottom: .875rem; }
+.mode {
+  display: flex; align-items: center; gap: .55rem;
+  font-size: var(--t-small); font-weight: 700; cursor: pointer;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-pill);
+  background: var(--surface); padding: .45rem .8rem;
+}
+.mode:hover { background: var(--paper); }
+.mode:has(input:checked) { background: var(--d-wash, #cde8ff); box-shadow: var(--sh-s); }
 
 .filterbox {
   width: 100%; margin-bottom: .5rem;
@@ -414,6 +488,14 @@ input[type='range']::-moz-range-thumb {
 .results { padding-top: 1rem; }
 .results:focus { outline: none; }
 
+/* Две колонки, а не три как в эталоне: в карточке живёт полоса занятия на
+   шкале дня — главная графика проекта, — и в 300 px она нечитаема.
+   Заголовки разделов и блок «обоих сразу» занимают всю ширину. */
+@media (min-width: 78rem) {
+  .results, .almost__body { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.25rem; align-items: start; }
+  .results > :not(.card), .almost__body > :not(.card) { grid-column: 1 / -1; }
+}
+
 .group-head {
   margin: 1.5rem 0 .75rem; padding-bottom: .375rem;
   border-bottom: 1px solid var(--edge);
@@ -427,20 +509,43 @@ input[type='range']::-moz-range-thumb {
   border: var(--bw) solid var(--ink);
   border-radius: var(--r-card);
   box-shadow: var(--sh-l);
-  margin-bottom: 1rem;
-  display: grid;
-  grid-template-columns: 6rem minmax(0, 1fr);
+  margin-bottom: 1.25rem;
   overflow: hidden;
 }
-.card__cover { grid-row: 1 / -1; position: relative; background: var(--d-wash); }
+/* Обложка стала полосой сверху, как в эталоне: на ней живут значок
+   направления, честный статус набора и сердце. */
+.card__cover {
+  position: relative; height: 8.5rem;
+  background: var(--d-wash);
+  border-bottom: var(--bw) solid var(--ink);
+}
 .card__cover .cover__svg { display: block; width: 100%; height: 100%; }
-.card__cover .ic {
-  position: absolute; top: .625rem; left: .625rem;
-  width: 2.125rem; height: 2.125rem; padding: .3rem;
+.card__badge {
+  position: absolute; top: .75rem; left: .875rem;
+  display: block; padding: .4rem;
   border: var(--bw) solid var(--ink); border-radius: var(--r-in);
   background: var(--surface); color: var(--ink);
 }
-.card__body { padding: .875rem 1rem; min-width: 0; }
+.card__status {
+  position: absolute; left: .875rem; bottom: .75rem;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-pill);
+  background: var(--lime); color: var(--ink);
+  padding: .3rem .7rem; font-size: var(--t-small); font-weight: 900;
+}
+.card__status--soon { background: var(--gold); }
+.fav {
+  position: absolute; top: .75rem; right: .875rem;
+  display: flex; align-items: center; justify-content: center;
+  width: 2.375rem; height: 2.375rem; padding: 0;
+  border: var(--bw) solid var(--ink); border-radius: 50%;
+  background: var(--surface); color: var(--ink); cursor: pointer;
+  transition: transform .06s ease-out, background-color .12s;
+}
+.fav:hover { background: var(--paper); }
+.fav:active { transform: scale(.92); }
+.fav[aria-pressed='true'] { background: var(--go); }
+.fav[aria-pressed='true'] .ic { fill: var(--ink); }
+.card__body { padding: 1rem 1.125rem 1.125rem; min-width: 0; }
 
 .card__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .75rem; }
 .card__title { margin: 0; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.015em; }
@@ -449,18 +554,30 @@ input[type='range']::-moz-range-thumb {
 .card__subtype { font-family: var(--sans); font-size: var(--t-small); font-weight: 400; color: var(--ink-soft); }
 .card__org { margin: 0; font-size: var(--t-small); color: var(--ink-soft); }
 
+/* Адрес, метро и возраст — мелкие пилюли: в эталоне это чипы, и они же
+   отделяют «где» от расписания ниже. */
 .card__place {
-  margin: .4rem 0 .625rem;
-  display: flex; flex-wrap: wrap; gap: .15rem 1rem;
+  margin: .5rem 0 .625rem;
+  display: flex; flex-wrap: wrap; gap: .35rem;
   font-size: var(--t-small);
 }
+.card__place > span {
+  background: var(--paper); border-radius: var(--r-s);
+  padding: .2rem .5rem; color: var(--ink);
+}
 .card__metro, .card__dist { color: var(--ink-soft); }
-.card__dist { font-family: var(--disp); font-variant-numeric: tabular-nums; color: var(--ink); }
+.card__dist { font-variant-numeric: tabular-nums; }
+/* Элемент несёт оба класса, а .age ниже задаёт grid — поэтому тут
+   селектор по тегу, иначе пилюля растягивается во всю карточку. */
+p.age--plain {
+  display: inline-block; margin: 0 0 .625rem;
+  background: var(--d-wash); border-radius: var(--r-s);
+  padding: .2rem .55rem; font-size: var(--t-small); color: var(--ink);
+}
 
 /* возраст */
 
 .age { list-style: none; margin: 0 0 .625rem; padding: 0; display: grid; gap: .15rem; }
-.age--plain { margin: 0 0 .625rem; font-size: var(--t-small); color: var(--ink-soft); }
 .age__row { display: flex; flex-wrap: wrap; gap: .2rem .6rem; font-size: var(--t-small); }
 .age__who { font-weight: 500; min-width: 5rem; }
 .age__row--near .age__who, .age__row--near .age__note { color: var(--ink-soft); }
@@ -591,18 +708,18 @@ input[type='range']::-moz-range-thumb {
 
 .more { display: block; margin: 1rem auto 0; }
 .noscript { background: var(--surface); border: var(--bw) solid var(--ink); border-radius: var(--r-tile); padding: 1rem; }
-/* Волна вместо линии: край страницы обрывается фестонами, а не правилом.
-   Рисуется повтором одного эллипса цвета бумаги поверх тёмного подвала,
-   поэтому не требует ни картинки, ни лишней разметки. */
+/* Волна вместо линии: край страницы не обрывается правилом, а стекает.
+   Рисуется одним инлайновым SVG в фоне поверх тёмного подвала, поэтому
+   не требует ни файла картинки, ни лишней разметки. */
 .foot {
   margin-top: 4rem;
   background: var(--ink); color: var(--paper);
   padding: 0 var(--gut) 2rem;
 }
 .foot::before {
-  content: ''; display: block; height: 22px;
-  margin: 0 calc(var(--gut) * -1) 2rem;
-  background: radial-gradient(46px 22px at 50% 0, var(--paper) 99%, transparent 100%) repeat-x 0 0 / 92px 22px;
+  content: ''; display: block; height: 58px;
+  margin: 0 calc(var(--gut) * -1) 2.25rem;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 58' preserveAspectRatio='none'%3E%3Cpath d='M0 0h1440v20c-210 38-400-6-620 10S250 66 0 30z' fill='%23fff8ec'/%3E%3C/svg%3E") no-repeat top center / 100% 100%;
 }
 .foot__in { max-width: var(--max); margin: 0 auto; display: grid; gap: 1.5rem; align-items: start; }
 @media (min-width: 48rem) {
@@ -750,7 +867,11 @@ input[type='range']::-moz-range-thumb {
   min-inline-size: 0;
 }
 .dirs { min-inline-size: 0; }
-.tiles legend { padding: 0; margin-bottom: .75rem; font-family: var(--disp); font-size: 1.25rem; font-weight: 700; color: var(--ink); }
+.tiles legend {
+  padding: 0; margin-bottom: .875rem;
+  font-family: var(--disp); font-size: 1.5rem; font-weight: 700; color: var(--ink);
+}
+.tiles legend small { font-family: var(--sans); font-size: .9375rem; font-weight: 400; color: var(--ink-soft); margin-left: .6rem; }
 .tiles__grid { display: contents; }
 
 .tile {
@@ -773,7 +894,7 @@ input[type='range']::-moz-range-thumb {
 }
 .tile__name {
   align-self: stretch;
-  font-family: var(--sans); font-size: .8125rem; font-weight: 800;
+  font-family: var(--sans); font-size: .75rem; font-weight: 800;
   line-height: 1.2; color: var(--ink);
 }
 .tile__n {
@@ -785,6 +906,20 @@ input[type='range']::-moz-range-thumb {
    девять фонов слишком разные по светлоте, чтобы один цвет текста был
    читаем на всех. */
 .tile[aria-pressed='true'] { box-shadow: inset 0 0 0 3px var(--ink), var(--sh-m); }
+
+/* Наклон. Это не анимация, а форма: плитки лежат стопкой, как наклейки,
+   и при prefers-reduced-motion остаются наклонёнными. Выпрямляется плитка
+   только под курсором — вот это движение и отключается. */
+.tile:nth-of-type(4n+1) { --tilt: -1.5deg; }
+.tile:nth-of-type(4n+2) { --tilt: 1deg; }
+.tile:nth-of-type(4n+3) { --tilt: -1deg; }
+.tile:nth-of-type(4n+4) { --tilt: 1.5deg; }
+.tile { transform: rotate(var(--tilt, 0deg)); }
+.tile:hover { transform: rotate(0deg) translateY(-2px); }
+.tile:active { transform: rotate(var(--tilt, 0deg)) translate(2px, 2px); }
+@media (prefers-reduced-motion: reduce) {
+  .tile:hover { transform: rotate(var(--tilt, 0deg)); }
+}
 /* Нулевая плитка гаснет, но не выбеливается: лента направлений должна
    остаться цельной полосой, а не распасться на пятна и дырки. */
 .tile[data-zero='1'] { background: var(--surface); box-shadow: none; }
@@ -796,6 +931,17 @@ input[type='range']::-moz-range-thumb {
 .tile[data-zero='1'] .tile__n { color: var(--ink-soft); }
 
 /* ── рисунки пустых состояний ────────────────────────────────────────────── */
+
+/* Конфетти. Это форма, а не движение: при prefers-reduced-motion остаётся.
+   Рисуется псевдоэлементами, поэтому не добавляет ни одного узла в разметку
+   и не попадает в озвучку скринридера. */
+.tiles, .panels { position: relative; }
+.tiles::after, .panels::before {
+  content: ''; position: absolute; border-radius: 50%; pointer-events: none;
+}
+.tiles::after { width: .9rem; height: .9rem; background: var(--gold); right: -.25rem; top: -1.25rem; }
+.panels::before { width: 1.1rem; height: 1.1rem; background: var(--window); left: -1.5rem; top: -.5rem; }
+@media (max-width: 63.99rem) { .tiles::after, .panels::before { display: none; } }
 
 .art { width: 7.5rem; height: auto; color: var(--ink); margin-bottom: .75rem; stroke-width: 2.25; }
 .nothing-here { display: flex; flex-direction: column; align-items: flex-start; }
@@ -860,27 +1006,21 @@ input[type='range']::-moz-range-thumb {
   .tiles legend { float: left; width: 100%; padding-inline: var(--gut); }
   .tile { flex: 0 0 8rem; min-height: 6.5rem; scroll-snap-align: start; }
 
-  /* Полоса-обложка на каждой из полусотни карточек — это километр
-     прокрутки ради украшения. На узком экране от направления остаётся
-     пиктограмма с точкой, а обложка живёт на странице группы. */
-  .card { grid-template-columns: minmax(0, 1fr); }
-  .card__cover { display: none; }
-  .hero-cover { height: 5rem; }
+  /* Обложку на телефоне не убираем — на ней живут статус и сердце, — но
+     режем вдвое: полсотни карточек по 136 px это километр прокрутки. */
+  .card__cover { height: 4.75rem; }
+  /* На укороченной обложке значок и статус не помещаются друг под другом,
+     поэтому встают в ряд. */
+  .card__status {
+    left: 3.75rem; top: 1.05rem; bottom: auto;
+    font-size: var(--t-micro); padding: .25rem .6rem;
+  }
+  .card__badge { top: .875rem; }
+  .fav { width: 2.125rem; height: 2.125rem; top: .875rem; }
+  .hero-cover { height: 6rem; }
 }
 
-/* ── направление внутри строк и карточек ─────────────────────────────────── */
-
-/* Пиктограмма в заголовке карточки нужна только там, где нет полосы-обложки. */
-.card__mark {
-  display: none;
-  width: 1.875rem; height: 1.875rem; padding: .25rem;
-  border: var(--bw) solid var(--ink); border-radius: 10px;
-  background: var(--d-chip); color: var(--ink);
-}
-@media (max-width: 37.49rem) {
-  .card__mark { display: block; }
-  .card__head { align-items: center; }
-}
+/* ── направление внутри строк ────────────────────────────────────────────── */
 
 .row__title .dot { display: inline-block; margin-right: .45rem; vertical-align: middle; }
 .tog__list .dot { display: inline-block; vertical-align: middle; }
@@ -888,7 +1028,7 @@ input[type='range']::-moz-range-thumb {
 /* Витрина и чипы — один фильтр в двух видах; вместе они не показываются
    никогда, иначе один и тот же список из девяти имён стоит на экране дважды. */
 @media (min-width: 64rem) { .dirs { display: none; } }
-@media (max-width: 63.99rem) { .tiles legend { display: none; } }
+@media (max-width: 63.99rem) { .tiles legend small { display: none; } }
 
 .chip .dot { margin-right: .1rem; align-self: center; }
 .chip[aria-pressed='true'] .dot { box-shadow: 0 0 0 1px var(--paper); }
@@ -909,7 +1049,13 @@ input[type='range']::-moz-range-thumb {
   text-decoration: none; white-space: nowrap;
 }
 .top__link:hover { color: var(--ink); }
-.top__link--go { color: var(--ink); font-weight: 800; text-decoration: underline; text-decoration-color: var(--go); }
+.top__link--go {
+  color: var(--ink); font-weight: 800; text-decoration: none;
+  border: var(--bw) solid var(--ink); border-radius: var(--r-pill);
+  background: var(--go); box-shadow: var(--sh-s);
+  padding: .35rem .9rem;
+}
+.top__link--go:hover { background: var(--go-deep); }
 
 .bell { position: relative; }
 .bell__btn {
@@ -1022,7 +1168,17 @@ input[type='range']::-moz-range-thumb {
 }
 .demobar a { margin-left: .5rem; }
 
+@media (max-width: 56rem) {
+  /* Меню шапки — ярлык к трём якорям на главной. На узком экране оно
+     дублирует то, что и так стоит подряд на экране, и только шумит. */
+  .top__nav { display: none; }
+}
+
 @media (max-width: 37.49rem) {
-  .top__demo { order: 3; flex-basis: 100%; }
+  .mark { font-size: 1.0625rem; }
+  .mark__badge svg { width: 1.75rem; height: 1.75rem; }
+  .top__in { gap: .5rem .75rem; }
   .login--drop { left: var(--gut); right: var(--gut); }
+  .demo-note { transform: none; font-size: var(--t-micro); }
+  .hero__acts .btn--big { flex: 1 1 100%; justify-content: center; }
 }

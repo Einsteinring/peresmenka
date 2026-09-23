@@ -86,6 +86,11 @@ function ageBlock(group, children, match) {
 
 /* ── карточка ────────────────────────────────────────────────────────────── */
 
+const HEART =
+  '<svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+  'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M12 20s-7-4.6-7-9.5A4.5 4.5 0 0 1 12 8a4.5 4.5 0 0 1 7 2.5C19 15.4 12 20 12 20z"/></svg>';
+
 export function groupCard(item, opts = {}) {
   const g = item.group || item;
   const match = item.match || null;
@@ -101,11 +106,24 @@ export function groupCard(item, opts = {}) {
       : `пробное ${price(g.priceSingle)}`
     : 'без пробного';
 
+  // Пилюля статуса берёт дни из того же intake(), что и строка «Набор» ниже:
+  // второго источника правды о наборе в проекте нет.
+  const pill = start.days <= 0
+    ? 'набор открыт'
+    : start.days === 1
+      ? 'старт завтра'
+      : start.days <= 30
+        ? `старт через ${start.days} ${plural(start.days, 'день', 'дня', 'дней')}`
+        : start.text;
+
   return `<article class="card" data-dir="${esc(g.direction)}"${opts.id ? ` id="${esc(opts.id)}"` : ''}>
-  <div class="card__cover">${coverSvg(g, 88, 240)}${dirIcon(g.direction, 20)}</div>
+  <div class="card__cover">${coverSvg(g, 240, 150)}
+    <span class="card__badge">${dirIcon(g.direction, 20)}</span>
+    <span class="card__status${start.urgent ? ' card__status--soon' : ''}">${esc(pill)}</span>
+    ${opts.compare === false ? '' : `<button type="button" class="fav" data-follow="${g.id}" aria-pressed="false" aria-label="Отслеживать группу">${HEART}</button>`}
+  </div>
   <div class="card__body">
   <div class="card__head">
-    <span class="card__mark">${dirIcon(g.direction, 18)}</span>
     <h3 class="card__title"><a href="${groupUrl(g)}">${esc(g.dir.short)}: ${esc(g.title)}</a>${subtype}</h3>
     <p class="card__org">${esc(g.org.name)}</p>
   </div>
@@ -134,7 +152,6 @@ export function groupCard(item, opts = {}) {
 
   ${opts.compare === false ? '' : `<div class="card__actions">
     <a class="btn" href="${groupUrl(g)}">Подробно и запись</a>
-    <button type="button" class="follow" data-follow="${g.id}" aria-pressed="false">Отслеживать</button>
     <label class="cmp"><input type="checkbox" class="cmp__box" value="${g.id}"${opts.compared ? ' checked' : ''}> Сравнить</label>
   </div>`}
   </div>

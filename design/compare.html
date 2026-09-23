@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сверка с эталоном — контрольная точка 1</title>
+<style>
+  :root {
+    --ink: #2a1e4a; --paper: #fff8ec; --soft: #6f6590; --line: #e7dccb;
+    --ok: #1f7a4d; --ok-bg: #d9f3e6; --alt: #7a5200; --alt-bg: #ffefc4; --no: #a3261a; --no-bg: #ffe0db;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #f1ecff; --paper: #1c1530; --soft: #b8aed8; --line: #3a2f56;
+      --ok: #7fe0b0; --ok-bg: #173a2b; --alt: #ffd67a; --alt-bg: #3b2f10; --no: #ff9c8f; --no-bg: #3f1a16;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  main { max-width: 1480px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 21px; margin: 48px 0 12px; }
+  h3 { font-size: 16px; margin: 0 0 8px; }
+  p { max-width: 78ch; }
+  .muted { color: var(--soft); }
+  code { font: 14px ui-monospace, Consolas, monospace; }
+
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .pair figure { margin: 0; }
+  .pair figcaption { font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--soft); }
+  .pair img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  .diff { margin: 10px 0 0; padding: 10px 14px; border-left: 3px solid var(--line); font-size: 14px; }
+  .diff li { margin-bottom: 4px; }
+  @media (max-width: 900px) { .pair { grid-template-columns: 1fr; } }
+
+  .phones { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .phones figure { margin: 0; }
+  .phones img { display: block; height: auto; border: 1px solid var(--line); border-radius: 12px; max-width: 100%; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 10px; border-top: 1px solid var(--line); }
+  thead th { border-top: 0; font-size: 12px; color: var(--soft); font-weight: 700; }
+  td:first-child { color: var(--soft); white-space: nowrap; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .tag--ok { color: var(--ok); background: var(--ok-bg); }
+  .tag--alt { color: var(--alt); background: var(--alt-bg); }
+  .tag--no { color: var(--no); background: var(--no-bg); }
+  .tablewrap { overflow-x: auto; }
+  .summary { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 16px 0 0; padding: 0; list-style: none; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Сверка с эталоном — контрольная точка 1</h1>
+<p class="muted">Ветка <code>redesign</code>, в <code>main</code> ничего не уходило. Покрыты шапка, герой и витрина
+направлений. Слева <code>design/reference.html</code>, справа сайт, оба на 1440 px, кадры режутся по границам секций
+самих страниц. Пересобрать: <code>node tools/shoot-compare.mjs</code>.</p>
+
+<ul class="summary">
+  <li><b>22</b> элемента эталона в этих секциях</li>
+  <li><span class="tag tag--ok">перенесено</span> 16</li>
+  <li><span class="tag tag--alt">перенесено иначе</span> 6</li>
+  <li><span class="tag tag--no">не перенесено</span> 0</li>
+  <li>Сценарии интерфейса: <b>10 из 10</b> + 1 известный баг, без правок сценариев</li>
+  <li>Модульные тесты: <b>82 из 82</b></li>
+</ul>
+
+<h2>1. Шапка</h2>
+<div class="pair">
+  <figure><figcaption>Эталон</figcaption><img src="compare/ref-header.png" alt="Шапка эталона"></figure>
+  <figure><figcaption>Сайт, вошедший (демо-режим)</figcaption><img src="compare/site-header-demo.png" alt="Шапка сайта в демо-режиме"></figure>
+</div>
+<div class="pair" style="margin-top:12px">
+  <div></div>
+  <figure><figcaption>Сайт, гость</figcaption><img src="compare/site-header.png" alt="Шапка сайта для гостя"></figure>
+</div>
+<ul class="diff">
+  <li>У колокольчика вместо красной точки — число непрочитанных.</li>
+  <li>Гостю не показываем чужое имя: на месте профиля та же сиреневая пилюля «Войти» и ссылка «Кабинет».</li>
+</ul>
+
+<h2>2. Герой</h2>
+<div class="pair">
+  <figure><figcaption>Эталон</figcaption><img src="compare/ref-hero.png" alt="Герой эталона"></figure>
+  <figure><figcaption>Сайт</figcaption><img src="compare/site-hero.png" alt="Герой сайта"></figure>
+</div>
+<ul class="diff">
+  <li>«Кружок» темнее: <code>#D84420</code> вместо <code>#FF6B4A</code>. У эталона 2,67:1 на бумаге — не проходит даже порог крупного текста.</li>
+  <li>«310 групп» в кнопке и пузыре считается из каталога, со склонением.</li>
+</ul>
+
+<h2>3. Витрина направлений</h2>
+<div class="pair">
+  <figure><figcaption>Эталон</figcaption><img src="compare/ref-tiles.png" alt="Плитки направлений в эталоне"></figure>
+  <figure><figcaption>Сайт</figcaption><img src="compare/site-tiles.png" alt="Плитки направлений на сайте"></figure>
+</div>
+<ul class="diff">
+  <li>«Робототехника» и «Единоборства» в эталоне обрезаны краем плитки; здесь переносятся по слогу, кегль тот же.</li>
+  <li>Точка бирюзового конфетти внизу слева — от следующей секции, «Подбор», ещё в старом виде.</li>
+</ul>
+
+<h2>Чек-лист элементов эталона</h2>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Секция</th><th>Элемент эталона</th><th>Статус</th><th>Как и почему</th></tr></thead>
+  <tbody>
+    <tr><td>Шапка</td><td>Знак: жёлтый квадрат 48 px, наклон −6°, четырёхцветный «пирог»</td><td><span class="tag tag--ok">перенесено</span></td><td>SVG знака взят из эталона как есть.</td></tr>
+    <tr><td>Шапка</td><td>«Пересменка», Unbounded 700, 24 px</td><td><span class="tag tag--ok">перенесено</span></td><td>На телефоне 19 px.</td></tr>
+    <tr><td>Шапка</td><td>Меню пилюлями: Направления · Подбор · Все группы</td><td><span class="tag tag--ok">перенесено</span></td><td>Якоря ведут на <code>#napravleniya</code>, <code>#podbor</code>, <code>#gruppy</code>, как в эталоне. Ниже 960 px меню скрыто: три блока и так идут подряд.</td></tr>
+    <tr><td>Шапка</td><td>Колокольчик в белом круге 48 px с красной точкой</td><td><span class="tag tag--alt">перенесено иначе</span></td><td>Вместо точки — число непрочитанных: оно уже было и информативнее. Появляется только у вошедшего: гостю не о чем уведомлять.</td></tr>
+    <tr><td>Шапка</td><td>Профиль: сиреневая пилюля, круг с буквой, имя</td><td><span class="tag tag--alt">перенесено иначе</span></td><td>У вошедшего — буква и имя из его профиля. У гостя та же пилюля с силуэтом и словом «Войти», рядом «Кабинет»: показывать гостю чужое имя нечестно.</td></tr>
+    <tr><td>Холст</td><td>Конфетти: жёлтая и розовая точки, коралловая волна</td><td><span class="tag tag--alt">перенесено иначе</span></td><td>Привязаны к центру холста 1440, как в эталоне. Ниже 1200 px скрыты: без полей налезали бы на текст. Остальные четыре штуки — в следующих секциях.</td></tr>
+    <tr><td>Герой</td><td>Плашка демо: жёлтая, пунктир, наклон −1°, значок «i»</td><td><span class="tag tag--ok">перенесено</span></td><td>Первая строка героя, над заголовком. На телефоне без наклона.</td></tr>
+    <tr><td>Герой</td><td>Заголовок: Unbounded 800, 72 px</td><td><span class="tag tag--ok">перенесено</span></td><td>60 px ниже 1200, 52 — ниже 960, 34–44 на телефоне.</td></tr>
+    <tr><td>Герой</td><td>«Кружок» кораллом <code>#FF6B4A</code></td><td><span class="tag tag--alt">перенесено иначе</span></td><td><code>#D84420</code>, 4,17:1 вместо 2,67:1. Оттенок тот же, проходит порог крупного текста.</td></tr>
+    <tr><td>Герой</td><td>Жёлтый росчерк под «Кружок»</td><td><span class="tag tag--ok">перенесено</span></td><td>Та же кривая SVG.</td></tr>
+    <tr><td>Герой</td><td>Подзаголовок 22 px, 600</td><td><span class="tag tag--ok">перенесено</span></td><td>Текст эталона.</td></tr>
+    <tr><td>Герой</td><td>Кнопка «Подобрать кружок →»: коралл, тень 5 px</td><td><span class="tag tag--ok">перенесено</span></td><td>Ведёт к подбору. Нажатие вдавливает кнопку в тень.</td></tr>
+    <tr><td>Герой</td><td>Кнопка «Все 310 групп»</td><td><span class="tag tag--ok">перенесено</span></td><td>Число — размер каталога со склонением, не зависит от фильтров.</td></tr>
+    <tr><td>Герой</td><td>Иллюстрация: солнце, лучи, робот −10°, нота +8°, волна −4°, две звезды</td><td><span class="tag tag--ok">перенесено</span></td><td>По координатам эталона, масштабируется целиком. Ниже 960 px уходит над текстом, на телефоне скрыта.</td></tr>
+    <tr><td>Герой</td><td>Пузырь «310 групп!», наклон −5°</td><td><span class="tag tag--ok">перенесено</span></td><td>Число из каталога.</td></tr>
+    <tr><td>Направления</td><td>«С чего начать?» 30 px и подзаголовок в строку</td><td><span class="tag tag--ok">перенесено</span></td><td>На телефоне подзаголовок переносится под заголовок.</td></tr>
+    <tr><td>Направления</td><td>Сетка в 9 колонок, зазор 16 px</td><td><span class="tag tag--ok">перенесено</span></td><td>5 колонок ниже 1200 px, лента со scroll-snap на телефоне.</td></tr>
+    <tr><td>Направления</td><td>Плитка 150 px, радиус 22, тень 4 px, наклоны −1,5° / +1° / −1° / +1,5°</td><td><span class="tag tag--ok">перенесено</span></td><td>Наклоны по той же последовательности. При reduced-motion наклон остаётся, выпрямление под курсором отключается.</td></tr>
+    <tr><td>Направления</td><td>Значок 46 px в насыщенном квадрате</td><td><span class="tag tag--ok">перенесено</span></td><td>Пиктограммы эталона заменили прежние во всём проекте, включая статические страницы.</td></tr>
+    <tr><td>Направления</td><td>Имя, Nunito 900, 15 px</td><td><span class="tag tag--alt">перенесено иначе</span></td><td>Длинные имена переносятся по слогу: «Робото-техника», «Едино-борства». В эталоне обрезаны: на имя остаётся около 90 px, а слово занимает 116. Edge русский сам не переносит, мягкие переносы ставит отрисовка.</td></tr>
+    <tr><td>Направления</td><td>Число в белой пилюле, Unbounded 600</td><td><span class="tag tag--ok">перенесено</span></td><td>Число живое — сколько групп даст выбор. У выбранной плитки пилюля тёмная, у пустой плитка гаснет.</td></tr>
+    <tr><td>Направления</td><td>Плитки — ссылки <code>&lt;a href="#"&gt;</code></td><td><span class="tag tag--alt">перенесено иначе</span></td><td>Кнопки с <code>aria-pressed</code>: плитка включает фильтр на этой же странице, а не ведёт на другую. Скринридер слышит «нажата / не нажата».</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Проверки</h2>
+<ul>
+  <li><b>Контраст новых пар:</b> профиль — чернила на <code>#E3D6FF</code>, 11,1:1. Буква на <code>#B08CFF</code> — 5,8:1. Плашка демо — 12,6:1. Счётчик колокольчика на <code>#FF5A3C</code> — 4,9:1. «Кружок» — 4,17:1, это крупный текст, порог 3:1.</li>
+  <li><b>Фокус с клавиатуры</b> проверен настоящими нажатиями Tab: ссылка «к результатам» → знак → три пункта меню → Кабинет → Войти → две кнопки героя → плитки. На каждом кольцо 3 px с отступом 4 px.</li>
+  <li><b>Переливы по ширине</b>: 0 на 1440, 390 и 360 px. Длинные имена в плитках не вылезают ни на одной ширине.</li>
+  <li><b>Сценарии интерфейса</b> (<code>npm run test:ui</code>) проходят без единой правки: 10 из 10. Одиннадцатый помечен <code>todo</code> — это найденный баг текущей версии: в демо-режиме шапка показывает вошедшего Ивана, а «Сохранить поиск» просит войти.</li>
+</ul>
+
+<h2>Телефон</h2>
+<p class="muted">В эталоне телефона нет — это решение в том же языке. Нижняя коралловая полоса «Фильтры» и всё ниже плиток пока в старом виде: это следующие секции.</p>
+<div class="phones">
+  <figure><figcaption>390 px</figcaption><img src="compare/site-390.png" width="390" alt="Главная на 390 px"></figure>
+  <figure><figcaption>360 px</figcaption><img src="compare/site-360.png" width="360" alt="Главная на 360 px"></figure>
+</div>
+
+<h2>Что дальше, после вашего ответа</h2>
+<p>Три карточки шагов «Кому / Когда / Где» со встроенными «добавить ребёнка», протяжкой по сетке, пресетами и
+выбором метро. Потом результаты с карточками и блоками «обоих сразу» и «почти подходит», подвал с волной, шторка
+на телефоне, статические страницы и кабинет. На каждом шаге — те же сценарии без правок.</p>
+
+</main>
+</body>
+</html>

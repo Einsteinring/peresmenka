@@ -1,0 +1,45 @@
+{
+  "refShots": {
+    "header": {
+      "file": "ref-header.png",
+      "height": 74
+    },
+    "hero": {
+      "file": "ref-hero.png",
+      "height": 576
+    },
+    "tiles": {
+      "file": "ref-tiles.png",
+      "height": 273
+    }
+  },
+  "mineShots": {
+    "header": {
+      "file": "site-header.png",
+      "height": 70
+    },
+    "hero": {
+      "file": "site-hero.png",
+      "height": 572
+    },
+    "tiles": {
+      "file": "site-tiles.png",
+      "height": 273
+    }
+  },
+  "phones": [
+    {
+      "w": 390,
+      "file": "site-390.png",
+      "overflow": 0,
+      "spill": []
+    },
+    {
+      "w": 360,
+      "file": "site-360.png",
+      "overflow": 0,
+      "spill": []
+    }
+  ],
+  "tilesSpill1440": []
+}

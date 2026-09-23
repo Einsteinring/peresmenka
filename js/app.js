@@ -33,6 +33,12 @@ async function boot() {
     fetch('/data/geo.json').then((r) => r.json())
   ]);
   index = buildIndex(catalog, geo);
+  // «Все 310 групп» в герое и в пузыре — размер каталога, а не текущей
+  // выдачи: ссылка ведёт ко всему списку, и число от фильтров не зависит.
+  for (const el of document.querySelectorAll('[data-total]')) {
+    const n = index.groups.length;
+    el.textContent = `${n} ${plural(n, 'группа', 'группы', 'групп')}`;
+  }
   q = parseQuery(location.search);
 
   buildDirections();
@@ -150,10 +156,28 @@ function buildDirections() {
     t.type = 'button';
     t.className = 'tile';
     t.dataset.dir = d.id;
-    t.innerHTML = `${dirIcon(d.id, 26)}<span class="tile__name">${esc(d.short)}</span><span class="tile__n"></span>`;
+    t.innerHTML = `<span class="tile__ic">${dirIcon(d.id, 26)}</span>` +
+      `<span class="tile__txt"><span class="tile__name">${esc(softHyphens(d.short))}</span> <span class="tile__n"></span></span>`;
     t.addEventListener('click', () => toggle('directions', d.id));
     tiles.append(t);
   }
+}
+
+// Мягкие переносы для длинных имён в плитке. В девятой доле ширины на имя
+// остаётся около 90 px, а «Робототехника» при 15 px занимает 116, и Edge
+// сам русский не переносит. Правило простое и для девяти имён достаточное:
+// перенос после гласной, если за ней согласная и снова гласная.
+const VOWELS = 'аеёиоуыэюя';
+function softHyphens(word) {
+  if (word.length < 10) return word;
+  let out = '';
+  for (let i = 0; i < word.length; i++) {
+    out += word[i];
+    if (i < 2 || word.length - i - 1 < 3) continue;
+    const [a, b, c] = [word[i], word[i + 1], word[i + 2]].map((x) => x.toLowerCase());
+    if (VOWELS.includes(a) && !VOWELS.includes(b) && VOWELS.includes(c)) out += '­';
+  }
+  return out;
 }
 
 function buildPresets() {
@@ -496,7 +520,6 @@ function renderAll() {
     ? `<span class="num">${res.total}</span> ${plural(res.total, 'группа', 'группы', 'групп')}`
     : 'Ничего не нашлось';
   $('mobile-count').textContent = String(res.total);
-  $('hero-count').textContent = String(res.total);
   $('apply-count').textContent = res.total
     ? `${res.total} ${plural(res.total, 'группу', 'группы', 'групп')}`
     : 'результат';

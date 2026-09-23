@@ -259,6 +259,17 @@ async function openPage(port, url, { width, height, mobile }) {
       await sleep(60);
     },
 
+    // Снимок полосы страницы от y до y + height в координатах документа.
+    // Нужен сборке design/compare.html, сценарии им не пользуются.
+    async shot(y, height, width) {
+      await page.eval('document.fonts.ready.then(() => true)');
+      const r = await send('Page.captureScreenshot', {
+        format: 'png', captureBeyondViewport: true,
+        clip: { x: 0, y, width, height, scale: 1 }
+      });
+      return Buffer.from(r.data, 'base64');
+    },
+
     params: () => page.eval('Object.fromEntries(new URLSearchParams(location.search))'),
     href: () => page.eval('location.href'),
 

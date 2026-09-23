@@ -1,0 +1,345 @@
+/* Пересменка — слой представления по эталону design/reference.html.
+
+   Эталон нарисован на неподвижном холсте 1440 с полями по 80 px: контент
+   1280. Все значения ниже сняты с него, инлайновые стили переведены в
+   классы. Телефонной версии в эталоне нет — она решена здесь в том же
+   языке и помечена отдельно.
+
+   Этот файл пока покрывает шапку, героя и витрину направлений. Остальные
+   блоки главной и остальные страницы переедут сюда на следующих шагах,
+   и тогда css/app.css уйдёт целиком. */
+
+:root {
+  --ink: #2a1e4a;
+  --paper: #fff8ec;
+  --white: #ffffff;
+  --coral: #ff6b4a;
+  --coral-hot: #e0442a;
+  --red: #ff5a3c;
+  --sun: #ffc93c;
+  --sun-soft: #ffe9a8;
+  --mint: #3dc9a6;
+  --sky: #5ab0ff;
+  --pink: #ff8fb8;
+  --lilac: #b08cff;
+  --lilac-soft: #e3d6ff;
+
+  --line: 2.5px;
+  --line-thick: 3px;
+  --lift-s: 3px 3px 0 var(--ink);
+  --lift-m: 4px 4px 0 var(--ink);
+  --lift-l: 5px 5px 0 var(--ink);
+  --lift-xl: 6px 6px 0 var(--ink);
+
+  --f-body: 'Nunito', system-ui, sans-serif;
+  --f-disp: 'Unbounded', 'Nunito', system-ui, sans-serif;
+
+  /* Поля: 80 px на 1440, как в эталоне; на узких экранах — 16 px. */
+  --edge-x: clamp(16px, 5.56vw, 80px);
+}
+
+body { font-family: var(--f-body); color: var(--ink); background: var(--paper); }
+
+.shell { width: min(1280px, 100% - var(--edge-x) * 2); margin-inline: auto; }
+
+/* Колечко фокуса отстоит от обводки: иначе три пикселя кольца сливаются
+   с двумя с половиной пикселями контура. */
+.head :focus-visible, .hero :focus-visible, .dirsec :focus-visible {
+  outline: 3px solid var(--ink); outline-offset: 4px; border-radius: 14px;
+}
+
+/* ── конфетти холста ─────────────────────────────────────────────────────── */
+
+/* Привязано к центру холста 1440, как в эталоне. На узких экранах точки
+   налезали бы на текст, поэтому живут только там, где есть поля. */
+.decor { position: absolute; inset: 0 0 auto; height: 0; pointer-events: none; }
+.decor > * { position: absolute; display: none; }
+.decor__dot { border-radius: 50%; }
+.decor__dot--sun { width: 20px; height: 20px; background: var(--sun); left: calc(50% - 720px + 50px); top: 290px; }
+.decor__dot--pink { width: 16px; height: 16px; background: var(--pink); left: calc(50% - 720px + 1382px); top: 182px; }
+.decor__squiggle {
+  width: 64px; height: 14px; left: calc(50% - 720px + 1358px); top: 606px;
+  fill: none; stroke: var(--coral); stroke-width: 4; stroke-linecap: round;
+}
+@media (min-width: 1200px) { .decor > * { display: block; } }
+body { position: relative; overflow-x: clip; }
+
+/* ── шапка ───────────────────────────────────────────────────────────────── */
+
+.head {
+  position: relative;
+  display: flex; align-items: center; gap: 24px;
+  padding-top: 22px;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; }
+.brand__badge {
+  flex: none; width: 48px; height: 48px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--sun); border: var(--line) solid var(--ink); box-shadow: var(--lift-s);
+  transform: rotate(-6deg);
+}
+.brand__badge svg { width: 28px; height: 28px; }
+.brand__name { font-family: var(--f-disp); font-weight: 700; font-size: 24px; letter-spacing: -0.5px; }
+
+.menu { display: flex; gap: 6px; margin-left: 24px; }
+.menu a {
+  padding: 10px 16px; border-radius: 999px;
+  font-weight: 800; font-size: 16px; color: var(--ink); text-decoration: none;
+}
+.menu a:hover { background: var(--white); box-shadow: inset 0 0 0 var(--line) var(--ink); }
+
+.head__me { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+/* Колокольчик и профиль. Разметку рисует js/topbar.js — он же в кабинете,
+   поэтому правила ограничены новой шапкой и кабинет пока не задевают. */
+.head .top__link { color: var(--ink); font-weight: 800; font-size: 16px; text-decoration: none; background: none; border: 0; padding: 10px 6px; font-family: inherit; cursor: pointer; }
+.head .top__link:hover { color: var(--coral-hot); }
+.head .roundbtn {
+  position: relative; width: 48px; height: 48px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 999px; background: var(--white); border: var(--line) solid var(--ink); color: var(--ink);
+}
+.head .roundbtn .ic { width: 22px; height: 22px; stroke-width: 2.2; }
+.head .bell__n {
+  position: absolute; top: -4px; right: -6px;
+  min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 999px; border: 2px solid var(--white); background: var(--red);
+  font: 800 11px/16px var(--f-body); color: var(--ink); text-align: center;
+}
+.head .bell__n:empty { display: none; }
+
+.head .profile {
+  height: 48px; padding: 0 18px 0 6px;
+  display: flex; align-items: center; gap: 10px;
+  border-radius: 999px; background: var(--lilac-soft); border: var(--line) solid var(--ink);
+  box-shadow: none; font-weight: 800; font-size: 16px; color: var(--ink);
+}
+.head .profile:hover { color: var(--ink); background: #d8c7ff; }
+.profile__av {
+  width: 34px; height: 34px; flex: none; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--lilac); font-family: var(--f-disp); font-size: 14px; font-weight: 700;
+}
+.head .login--drop { top: calc(100% + 12px); right: 0; }
+
+/* ── герой ───────────────────────────────────────────────────────────────── */
+
+.hero { position: relative; display: flex; align-items: center; gap: 48px; padding-top: 48px; }
+.hero__col { flex: 1 1 auto; max-width: 760px; display: flex; flex-direction: column; gap: 24px; }
+
+/* Оговорка про вымышленные данные — первая строка героя, как в эталоне:
+   её видно раньше заголовка, но она не спорит с ним размером. */
+.note {
+  align-self: flex-start; margin: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px 8px 10px;
+  background: var(--sun-soft); border: 2px dashed var(--ink); border-radius: 14px;
+  font-size: 14px; font-weight: 700; line-height: 1.35;
+  transform: rotate(-1deg);
+}
+.note__ic { flex: none; width: 20px; height: 20px; }
+
+.hero__t {
+  margin: 0; font-family: var(--f-disp); font-weight: 800;
+  font-size: 72px; line-height: 1.05; letter-spacing: -2px;
+}
+/* Коралл эталона #FF6B4A на бумаге даёт 2,67:1 — мимо порога даже для
+   крупного текста. Здесь он затемнён до #D84420, 4,17:1; оттенок тот же. */
+.hero__hl { position: relative; display: inline-block; color: #d84420; }
+.hero__swash {
+  position: absolute; left: 0; bottom: -12px; width: 100%; height: 18px;
+  fill: none; stroke: var(--sun); stroke-width: 8; stroke-linecap: round;
+}
+.hero__lead { margin: 0; max-width: 620px; font-size: 22px; line-height: 1.5; font-weight: 600; }
+
+.hero__acts { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 8px; }
+.cta {
+  height: 60px; padding: 0 26px;
+  display: inline-flex; align-items: center;
+  background: var(--white); color: var(--ink);
+  border: var(--line) solid var(--ink); border-radius: 20px;
+  font-weight: 800; font-size: 18px; text-decoration: none;
+  transition: transform .08s ease-out, box-shadow .08s ease-out;
+}
+.cta--go { padding: 0 30px; background: var(--coral); box-shadow: var(--lift-l); font-weight: 900; font-size: 19px; }
+/* Зазор у флекса нельзя: текст вокруг числа во «Все 310 групп» стал бы
+   отдельными элементами и разъехался. Отступ получает только стрелка. */
+.cta svg { width: 22px; height: 22px; margin-left: 10px; }
+.cta:hover { color: var(--ink); background: var(--paper); }
+.cta--go:hover { background: #ff7d60; }
+.cta:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
+
+/* Иллюстрация. Холст 500 × 420, фигуры расставлены по координатам
+   эталона и масштабируются вместе с ним через --k. */
+.hero__art { --k: 1; position: relative; flex: none; width: calc(500px * var(--k)); height: calc(420px * var(--k)); }
+.shape { position: absolute; box-sizing: border-box; }
+.shape--sun {
+  left: calc(150px * var(--k)); top: calc(40px * var(--k));
+  width: calc(280px * var(--k)); height: calc(280px * var(--k));
+  border-radius: 999px; background: var(--sun); border: var(--line-thick) solid var(--ink);
+}
+.shape--rays {
+  left: calc(110px * var(--k)); top: 0; width: calc(360px * var(--k)); height: calc(360px * var(--k));
+  fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round;
+}
+.shape--robot, .shape--note, .shape--wave {
+  display: flex; align-items: center; justify-content: center;
+  border: var(--line-thick) solid var(--ink); box-shadow: var(--lift-xl); color: var(--ink);
+}
+.shape--robot {
+  left: calc(30px * var(--k)); top: calc(70px * var(--k));
+  width: calc(150px * var(--k)); height: calc(150px * var(--k));
+  border-radius: calc(36px * var(--k)); background: var(--mint); transform: rotate(-10deg);
+}
+.shape--robot svg { width: 56%; height: 56%; }
+.shape--note {
+  left: calc(300px * var(--k)); top: calc(210px * var(--k));
+  width: calc(170px * var(--k)); height: calc(170px * var(--k));
+  border-radius: 999px; background: var(--pink); transform: rotate(8deg);
+}
+.shape--note svg { width: 47%; height: 47%; }
+.shape--wave {
+  left: calc(110px * var(--k)); top: calc(270px * var(--k));
+  width: calc(180px * var(--k)); height: calc(110px * var(--k));
+  border-radius: calc(60px * var(--k)) calc(60px * var(--k)) calc(60px * var(--k)) calc(20px * var(--k));
+  background: var(--sky); transform: rotate(-4deg);
+}
+.shape--wave svg { width: 56%; height: 55%; }
+.shape--star {
+  left: calc(420px * var(--k)); top: calc(20px * var(--k));
+  width: calc(56px * var(--k)); height: calc(56px * var(--k));
+  fill: var(--lilac); stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round;
+  transform: rotate(12deg);
+}
+.shape--star-sm {
+  left: calc(10px * var(--k)); top: calc(260px * var(--k));
+  width: calc(36px * var(--k)); height: calc(36px * var(--k));
+  fill: var(--coral); stroke-width: 1.8; transform: none;
+}
+.shape--bubble {
+  left: calc(240px * var(--k)); top: calc(20px * var(--k));
+  padding: 8px 14px; white-space: nowrap;
+  background: var(--white); border: var(--line) solid var(--ink); border-radius: 16px 16px 16px 4px;
+  font-family: var(--f-disp); font-weight: 700; font-size: calc(15px * var(--k));
+  transform: rotate(-5deg);
+}
+
+/* ── витрина направлений ─────────────────────────────────────────────────── */
+
+.dirsec { position: relative; display: flex; flex-direction: column; gap: 22px; padding-top: 64px; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.sec-head__t { margin: 0; font-family: var(--f-disp); font-weight: 700; font-size: 30px; letter-spacing: -0.5px; line-height: 1.2; }
+.sec-head__sub { font-size: 17px; font-weight: 700; }
+
+.dtiles { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 16px; }
+
+/* Плитка. Наклон — форма, а не движение: он остаётся и при
+   prefers-reduced-motion. Отключается только выпрямление под курсором. */
+.dtiles .tile {
+  height: 150px; box-sizing: border-box; padding: 16px;
+  display: flex; flex-direction: column; justify-content: space-between; align-items: stretch;
+  background: var(--d-wash); color: var(--ink);
+  border: var(--line) solid var(--ink); border-radius: 22px; box-shadow: var(--lift-m);
+  font: inherit; text-align: left; cursor: pointer;
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform .12s ease-out, box-shadow .08s ease-out;
+}
+.dtiles .tile:nth-child(4n+1) { --tilt: -1.5deg; }
+.dtiles .tile:nth-child(4n+2) { --tilt: 1deg; }
+.dtiles .tile:nth-child(4n+3) { --tilt: -1deg; }
+.dtiles .tile:nth-child(4n+4) { --tilt: 1.5deg; }
+.dtiles .tile:nth-child(9) { --tilt: -1deg; }
+.dtiles .tile:hover { transform: rotate(0deg) translateY(-3px); }
+.dtiles .tile:active { transform: rotate(var(--tilt, 0deg)) translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+@media (prefers-reduced-motion: reduce) {
+  .dtiles .tile, .cta { transition: none; }
+  .dtiles .tile:hover { transform: rotate(var(--tilt, 0deg)); }
+}
+
+.tile__ic {
+  width: 46px; height: 46px; flex: none; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 14px; background: var(--d-chip); border: 2px solid var(--ink);
+}
+.tile__ic .ic { width: 26px; height: 26px; color: var(--ink); }
+.tile__txt { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.dtiles .tile__name { font-family: var(--f-body); font-weight: 900; font-size: 15px; line-height: 1.2; color: var(--ink); overflow-wrap: normal; }
+.dtiles .tile__n {
+  align-self: flex-start; padding: 2px 10px;
+  background: var(--white); border-radius: 999px;
+  font-family: var(--f-disp); font-weight: 600; font-size: 14px; line-height: 1.4; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Выбранное направление: вторая обводка внутрь. Заливкой не отметить —
+   девять фонов разной светлоты, и один цвет текста на всех не читается. */
+.dtiles .tile[aria-pressed='true'] { box-shadow: inset 0 0 0 3px var(--ink), var(--lift-m); }
+.dtiles .tile[aria-pressed='true'] .tile__n { background: var(--ink); color: var(--white); }
+.dtiles .tile[data-zero='1'] { background: var(--white); box-shadow: none; }
+.dtiles .tile[data-zero='1'] .tile__ic { opacity: .4; }
+.dtiles .tile[data-zero='1'] .tile__name, .dtiles .tile[data-zero='1'] .tile__n { color: #6f6590; }
+
+/* ── ширины между эталоном и телефоном ───────────────────────────────────── */
+
+/* На имя в девятой доле остаётся около 90 px, а «Робототехника» при 15 px
+   занимает 116. Кегль эталона сохранён, слово переносится по слогу:
+   мягкие переносы ставит js/app.js, CSS лишь разрешает перенос. */
+.dtiles .tile__name { hyphens: manual; }
+@media (max-width: 1360px) {
+  .dtiles { gap: 12px; }
+  .dtiles .tile { padding: 14px; }
+}
+@media (max-width: 1200px) {
+  .hero__art { --k: .78; }
+  .hero__t { font-size: 60px; }
+  .dtiles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .dtiles .tile__name { font-size: 15px; }
+}
+@media (max-width: 960px) {
+  .menu { display: none; }
+  .hero { flex-direction: column; align-items: stretch; gap: 8px; }
+  .hero__art { --k: .62; align-self: center; order: -1; margin-bottom: -8px; }
+  .hero__t { font-size: 52px; letter-spacing: -1.5px; }
+  .hero__lead { font-size: 19px; }
+}
+
+/* ── телефон (в эталоне его нет) ─────────────────────────────────────────── */
+
+@media (max-width: 599px) {
+  .head { gap: 12px; padding-top: 14px; }
+  .brand { gap: 10px; }
+  .brand__badge { width: 40px; height: 40px; border-radius: 13px; }
+  .brand__badge svg { width: 24px; height: 24px; }
+  .brand__name { font-size: 19px; }
+  .head__me { gap: 8px; }
+  .head .top__link:not(.profile) { display: none; }
+  .head .profile { height: 42px; padding: 0 14px 0 4px; font-size: 15px; }
+  .head .roundbtn { width: 42px; height: 42px; }
+  .profile__av { width: 30px; height: 30px; }
+
+  .hero { padding-top: 24px; gap: 18px; }
+  .hero__art { display: none; }
+  .hero__col { gap: 18px; }
+  .note { font-size: 13px; transform: none; }
+  /* 44 px — Unbounded 800 держит «работой и школой» в две строки на 360. */
+  .hero__t { font-size: clamp(34px, 10vw, 44px); letter-spacing: -1px; }
+  .hero__lead { font-size: 17px; }
+  .hero__acts { gap: 12px; }
+  .cta { flex: 1 1 100%; justify-content: center; height: 56px; }
+
+  /* Девять плиток лентой с прилипанием: три в ряд уводят подбор за сгиб,
+     а лента показывает, что список продолжается. */
+  .dirsec { padding-top: 40px; gap: 14px; }
+  .sec-head__t { font-size: 24px; }
+  .sec-head__sub { font-size: 15px; }
+  .dtiles {
+    display: flex; gap: 12px;
+    margin-inline: calc(var(--edge-x) * -1); padding: 6px var(--edge-x) 12px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--edge-x);
+    scrollbar-width: none;
+  }
+  .dtiles::-webkit-scrollbar { display: none; }
+  .dtiles .tile { flex: 0 0 132px; height: 136px; scroll-snap-align: start; }
+  .dtiles .tile__name { font-size: 14px; }
+}

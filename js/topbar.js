@@ -18,7 +18,11 @@ const esc = (s) =>
 
 const BELL =
   '<svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-  '<path d="M6 10a6 6 0 0 1 12 0v5l2 3H4l2-3z"/><path d="M10 21h4"/></svg>';
+  '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+
+const USER =
+  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
 
 const TG =
   '<svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
@@ -279,7 +283,8 @@ export async function mountTopbar(root, { onState } = {}) {
 
   if (!state.user) {
     root.innerHTML =
-      '<a class="top__link" href="/lk/">Кабинет</a><button type="button" class="top__link top__link--go" id="top-login">Войти</button>';
+      '<a class="top__link" href="/lk/">Кабинет</a>' +
+      `<button type="button" class="top__link top__link--go profile profile--guest" id="top-login"><span class="profile__av">${USER}</span>Войти</button>`;
     root.querySelector('#top-login').addEventListener('click', () => {
       const existing = document.querySelector('.login--drop');
       if (existing) return existing.remove();
@@ -293,13 +298,13 @@ export async function mountTopbar(root, { onState } = {}) {
   const unread = state.unread || 0;
   root.innerHTML = `
     <div class="bell">
-      <button type="button" class="bell__btn" id="bell-btn" aria-expanded="false"
+      <button type="button" class="bell__btn roundbtn" id="bell-btn" aria-expanded="false"
         aria-label="Уведомления${unread ? `, непрочитанных ${unread}` : ''}">
         ${BELL}<span class="bell__n num" id="bell-n" aria-live="polite">${unread || ''}</span>
       </button>
       <div class="bell__drop" id="bell-drop" hidden></div>
     </div>
-    <a class="top__link" href="/lk/">${esc(state.user.first_name || 'Кабинет')}</a>`;
+    <a class="top__link profile" href="/lk/"><span class="profile__av" aria-hidden="true">${esc((state.user.first_name || 'К').slice(0, 1))}</span>${esc(state.user.first_name || 'Кабинет')}</a>`;
 
   const btn = root.querySelector('#bell-btn');
   const drop = root.querySelector('#bell-drop');

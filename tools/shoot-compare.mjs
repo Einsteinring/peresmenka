@@ -79,6 +79,19 @@ for (const [w, h] of [[390, 844], [360, 740]]) {
   phones.push({ w, file, overflow, spill });
 }
 
+// Телефон после прокрутки: кнопка героя ушла за край — появилась полоса.
+{
+  const p = await browser.open(`${site.origin}/`, { width: 390, height: 844, mobile: true });
+  await p.waitFor('document.querySelectorAll(".tile").length === 9 && document.fonts.status === "loaded"');
+  await p.wheel(1200);
+  await p.waitFor('document.getElementById("mobilebar").dataset.away === "1"');
+  await new Promise((r) => setTimeout(r, 400));
+  writeFileSync(join(OUT, 'site-390-scrolled.png'), await p.shotViewport());
+  await p.eval('window.scrollTo(0, document.documentElement.scrollHeight)');
+  await new Promise((r) => setTimeout(r, 400));
+  writeFileSync(join(OUT, 'site-390-end.png'), await p.shotViewport());
+}
+
 const tilesSpill1440 = await mine.eval(`[...document.querySelectorAll('.tile')].filter((t) => {
   const n = t.querySelector('.tile__name'); return n.scrollWidth > n.clientWidth + 1;
 }).map((t) => t.querySelector('.tile__name').textContent)`);

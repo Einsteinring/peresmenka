@@ -10,13 +10,15 @@ import { createGrid, createList, describeWindows } from './grid.js';
 import { groupCard, suggestionList, togetherCard, esc, groupUrl } from './render.js';
 import { dirIcon, emptyArt } from './visual.js';
 import { distance, groupsWord, plural, price, span, DAY_SHORT, time } from './format.js';
-import { favIds, saveCurrentSearch, toggleFav } from './account.js';
+import { favIds, favView, isDemo, saveCurrentSearch, toggleFav } from './account.js';
+import { describeQuery } from './describe.js';
 import { loginPanel, mountTopbar } from './topbar.js';
 
 const $ = (id) => document.getElementById(id);
 const PAGE = 30;
 
 let index = null;
+let lastTotal = 0;
 let q = emptyQuery();
 let grid = null;
 let list = null;
@@ -95,8 +97,13 @@ function mountSaveBar() {
       return;
     }
     try {
-      await saveCurrentSearch(search);
-      $('save-msg').innerHTML = 'Сохранено. <a href="/lk/?tab=saves">Открыть кабинет</a>';
+      const done = await saveCurrentSearch(search, { name: describeQuery(q, index), count: lastTotal });
+      // В демо поиск живёт в демо-кабинете до закрытия вкладки — так и пишем.
+      $('save-msg').innerHTML = !done?.demo
+        ? 'Сохранено. <a href="/lk/?tab=saves">Открыть кабинет</a>'
+        : done.duplicate
+          ? 'Этот поиск уже сохранён. <a href="/lk/?demo=1&amp;tab=saves">Открыть кабинет</a>'
+          : 'Сохранено в демо-кабинете до закрытия вкладки. <a href="/lk/?demo=1&amp;tab=saves">Открыть кабинет</a>';
     } catch (err) {
       if (err.status === 401) return offerLogin('Чтобы сохранить поиск и узнать о новых группах, нужен вход.');
       $('save-msg').textContent = err.message;
@@ -157,16 +164,17 @@ function buildDirections() {
     t.className = 'tile';
     t.dataset.dir = d.id;
     t.innerHTML = `<span class="tile__ic">${dirIcon(d.id, 26)}</span>` +
-      `<span class="tile__txt"><span class="tile__name">${esc(softHyphens(d.short))}</span> <span class="tile__n"></span></span>`;
+      `<span class="tile__txt"><span class="tile__name${d.short.length > 10 ? ' tile__name--long' : ''}">${esc(softHyphens(d.short))}</span> <span class="tile__n"></span></span>`;
     t.addEventListener('click', () => toggle('directions', d.id));
     tiles.append(t);
   }
 }
 
-// Мягкие переносы для длинных имён в плитке. В девятой доле ширины на имя
-// остаётся около 90 px, а «Робототехника» при 15 px занимает 116, и Edge
-// сам русский не переносит. Правило простое и для девяти имён достаточное:
-// перенос после гласной, если за ней согласная и снова гласная.
+// Длинные имена в плитке («Робототехника», «Единоборства») получают класс,
+// по которому CSS уменьшает кегль и трекинг, — так они помещаются целиком.
+// Мягкие переносы — запасной вариант на случай крупного системного шрифта
+// или масштаба: Edge сам русский не переносит. Правило простое и для девяти
+// имён достаточное: перенос после гласной, если за ней согласная и гласная.
 const VOWELS = 'аеёиоуыэюя';
 function softHyphens(word) {
   if (word.length < 10) return word;
@@ -317,25 +325,40 @@ function wireControls() {
   $('strict').addEventListener('change', (e) => apply({ strict: e.target.checked }));
   $('reset').addEventListener('click', () => apply(emptyQuery()));
 
-  $('open-filters').addEventListener('click', () => {
+  // Шторку открывают двое: полоса «Фильтры» и на узком экране кнопка героя
+  // «Подобрать кружок» — её якорь #podbor ведёт в пустоту, подбор там в шторке.
+  // Фокус после закрытия возвращается тому, кто открывал.
+  const narrow = window.matchMedia('(max-width: 63.99rem)');
+  let opener = null;
+  const openSheet = (from) => {
+    opener = from;
     $('builder').dataset.sheet = 'open';
     $('sheet-close').focus();
-  });
+  };
   const closeSheet = () => {
     $('builder').dataset.sheet = 'closed';
-    $('open-filters').focus();
+    const back = opener && opener.getClientRects().length ? opener : $('open-filters');
+    back.focus();
   };
+  $('open-filters').addEventListener('click', () => openSheet($('open-filters')));
+  const heroGo = document.querySelector('.cta--go');
+  heroGo?.addEventListener('click', (e) => {
+    if (!narrow.matches) return;
+    e.preventDefault();
+    openSheet(heroGo);
+  });
+  watchHeroButton(heroGo);
   $('sheet-close').addEventListener('click', closeSheet);
   $('apply-filters').addEventListener('click', closeSheet);
 
   // Ниже 768 px сетки нет, и список окон там не «дополнительно», а сам
   // редактор: держим его раскрытым, иначе половина фильтра прячется
   // за строкой, которой на этом экране даже не видно.
-  const narrow = window.matchMedia('(max-width: 47.99rem)');
+  const phone = window.matchMedia('(max-width: 47.99rem)');
   const syncAlt = () => {
-    if (narrow.matches) $('alt').open = true;
+    if (phone.matches) $('alt').open = true;
   };
-  narrow.addEventListener('change', syncAlt);
+  phone.addEventListener('change', syncAlt);
   syncAlt();
 
   $('results').addEventListener('click', onResultsClick);
@@ -347,6 +370,20 @@ function wireControls() {
   });
   $('cmp-open').addEventListener('click', openCompare);
   $('cmp-close').addEventListener('click', () => $('cmpdlg').close());
+}
+
+// Полоса «Фильтры» на телефоне дублирует кнопку героя «Подобрать кружок»,
+// поэтому появляется, только когда та ушла за край экрана, и прячется,
+// когда кнопка снова видна. Без наблюдателя полоса просто видна всегда.
+function watchHeroButton(button) {
+  const bar = $('mobilebar');
+  if (!button || !('IntersectionObserver' in window)) {
+    bar.dataset.away = '1';
+    return;
+  }
+  new IntersectionObserver(([entry]) => {
+    bar.dataset.away = entry.isIntersecting ? '0' : '1';
+  }).observe(button);
 }
 
 function locate() {
@@ -516,6 +553,7 @@ function renderAll() {
   const box = $('results');
   const parts = [];
 
+  lastTotal = res.total;
   $('count').innerHTML = res.total
     ? `<span class="num">${res.total}</span> ${plural(res.total, 'группа', 'группы', 'групп')}`
     : 'Ничего не нашлось';
@@ -595,7 +633,7 @@ function onResultsClick(e) {
     if (!followed) return offerLogin('Чтобы отслеживать цену и набор в этой группе, нужен вход.');
     const on = !followed.has(id);
     (on ? followed.add(id) : followed.delete(id), paintFollowed());
-    toggleFav(id, on).catch(() => refreshFollowed());
+    toggleFav(id, on, isDemo() ? favView(index.byId.get(id)) : undefined).catch(() => refreshFollowed());
     return;
   }
   const fix = e.target.closest('[data-fix]');

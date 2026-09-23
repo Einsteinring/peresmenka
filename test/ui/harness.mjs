@@ -244,6 +244,13 @@ async function openPage(port, url, { width, height, mobile }) {
       await page.key('Tab');
     },
 
+    // Прокрутка колесом, как у человека: страница едет, наблюдатели
+    // пересечений срабатывают так же, как в жизни.
+    async wheel(dy, at = { x: 100, y: 200 }) {
+      await send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: at.x, y: at.y, deltaX: 0, deltaY: dy });
+      await sleep(250);
+    },
+
     async type(text) {
       await send('Input.insertText', { text: String(text) });
       await sleep(60);
@@ -267,6 +274,13 @@ async function openPage(port, url, { width, height, mobile }) {
         format: 'png', captureBeyondViewport: true,
         clip: { x: 0, y, width, height, scale: 1 }
       });
+      return Buffer.from(r.data, 'base64');
+    },
+
+    // Снимок ровно того, что на экране, вместе с закреплёнными элементами.
+    async shotViewport() {
+      await page.eval('document.fonts.ready.then(() => true)');
+      const r = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
       return Buffer.from(r.data, 'base64');
     },
 

@@ -702,21 +702,7 @@ p.age--plain {
 .mobilebar { display: none; }
 
 @media (max-width: 63.99rem) {
-  .mobilebar {
-    display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 25;
-    padding: .5rem var(--gut) calc(.5rem + env(safe-area-inset-bottom));
-    background: var(--paper); border-top: var(--bw) solid var(--ink);
-  }
-  .mobilebar__btn {
-    width: 100%; display: flex; justify-content: space-between; align-items: center;
-    border: var(--bw) solid var(--ink); border-radius: var(--r-btn);
-    background: var(--go); color: var(--ink);
-    box-shadow: var(--sh-s);
-    padding: .7rem .875rem; font: inherit; font-weight: 900; cursor: pointer;
-  }
-  .mobilebar__btn .num { font-family: var(--disp); font-variant-numeric: tabular-nums; }
-
-  body { padding-bottom: 4rem; }
+  /* Полоса «Фильтры» — в css/site.css. */
 
   .builder[data-sheet='closed'] { display: none; }
   .builder[data-sheet='open'] {

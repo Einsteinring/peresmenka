@@ -187,10 +187,10 @@ test('сохранить поиск гостем: панель входа в п�
   await page.close();
 });
 
-// Баг текущей версии, найден этим сценарием: в демо-режиме шапка показывает
-// вошедшего «Ивана», а «Сохранить поиск» идёт в живой API и просит войти.
-// Помечен todo до исправления — после него метка снимается, остальное как есть.
-test('сохранить поиск в демо-режиме', { todo: 'баг: в демо сохранение просит вход' }, async () => {
+// Этот сценарий нашёл баг: в демо-режиме шапка показывала вошедшего «Ивана»,
+// а «Сохранить поиск» шёл в живой API и просил войти. Исправлено, метка todo
+// снята — единственная правка сценария, остальное как было.
+test('сохранить поиск в демо-режиме', async () => {
   const page = await open('/?kids=8&demo=1');
   await page.click(button('^сохранить поиск'), 'кнопка «Сохранить поиск»');
   await page.waitFor(`/сохранено/i.test(document.body.innerText)`, { what: 'подтверждение «Сохранено»' });
@@ -289,6 +289,10 @@ test('шторка фильтров на 390 px', async () => {
   assert.equal(overflow, 0, 'страница шире экрана');
   const before = await count(page);
 
+  // Полоса «Фильтры» появляется, когда кнопка героя уходит за край экрана,
+  // поэтому сначала прокручиваем. Это разрешённая правка сценария.
+  await page.wheel(900);
+
   // До открытия шторки конструктора на экране нет, есть кнопка «Фильтры».
   assert.equal(await page.eval(`!!__ui.label('^Возраст ребёнка') || /когда удобно возить/i.test(__ui.all('h2, h3').map((h) => h.textContent).join(' '))`), false,
     'конструктор должен прятаться в шторку');
@@ -307,6 +311,66 @@ test('шторка фильтров на 390 px', async () => {
   assert.equal((await page.params()).dir, 'shahmaty');
   const focus = await page.eval(`__ui.norm(document.activeElement.textContent)`);
   assert.match(focus, /^фильтры/i, 'фокус должен вернуться на кнопку «Фильтры»');
+  noErrors(page);
+  await page.close();
+});
+
+/* ── новое поведение: отдельными сценариями, старые не тронуты ───────────── */
+
+test('полоса «Фильтры» на телефоне: только когда кнопка героя за краем', async () => {
+  const page = await open('/', { width: 390, height: 844, mobile: true });
+  const barShown = `!!__ui.text('button', '^фильтры')`;
+
+  // На первом экране кнопка героя видна — полоса её не дублирует.
+  await page.waitFor(`!!__ui.text('a, button', '^подобрать кружок')`, { what: 'кнопка героя' });
+  assert.equal(await page.eval(barShown), false, 'на первом экране полосы быть не должно');
+
+  await page.wheel(900);
+  await page.waitFor(barShown, { what: 'полоса появилась после прокрутки' });
+
+  await page.wheel(-2000);
+  await page.waitFor(`!(${barShown})`, { what: 'полоса спряталась у кнопки героя' });
+
+  // Конец страницы не прячется под полосой: последняя ссылка подвала над ней.
+  await page.eval('window.scrollTo(0, document.documentElement.scrollHeight)');
+  await page.waitFor(barShown);
+  const gap = await page.eval(`(() => {
+    const bar = __ui.text('button', '^фильтры').getBoundingClientRect();
+    const last = __ui.all('footer a').pop().getBoundingClientRect();
+    return Math.round(bar.top - last.bottom);
+  })()`);
+  assert.ok(gap >= 0, `полоса закрывает последнюю ссылку подвала на ${-gap} px`);
+
+  // На узком экране кнопка героя сама открывает шторку: якорь ведёт в пустоту.
+  await page.eval('window.scrollTo(0, 0)');
+  await page.click(button('^подобрать кружок'), 'кнопка героя');
+  await page.waitFor(`/когда удобно возить/i.test(__ui.all('h2, h3').map((h) => h.textContent).join(' '))`, { what: 'шторка открылась с кнопки героя' });
+  noErrors(page);
+  await page.close();
+});
+
+test('демо: сохранённый поиск и отслеживание видны в демо-кабинете', async () => {
+  const page = await open('/?kids=8&demo=1');
+
+  await page.click(button('^сохранить поиск'), 'кнопка «Сохранить поиск»');
+  await page.waitFor(`/сохранено/i.test(document.body.innerText)`, { what: 'подтверждение' });
+  assert.equal(await page.eval(`/нужен вход/i.test(document.body.innerText)`), false, 'в демо не просим войти');
+
+  // Сердце на карточке, которой ещё нет в избранном заготовки.
+  const title = await page.eval(`(() => {
+    const card = __ui.all('article').find((a) => a.querySelector('[aria-pressed="false"][aria-label]'));
+    card.dataset.pick = '1';
+    return __ui.norm(card.querySelector('h3, h2').textContent).split(':').pop().trim().split(/\s+/)[0];
+  })()`);
+  await page.click(`document.querySelector('[data-pick="1"] [aria-pressed][aria-label]')`, 'сердце на карточке');
+  await page.waitFor(`document.querySelector('[data-pick="1"] [aria-pressed][aria-label]').getAttribute('aria-pressed') === 'true'`, { what: 'сердце отмечено' });
+  assert.equal(await page.eval(`/нужен вход/i.test(document.body.innerText)`), false, 'в демо не просим войти');
+
+  // В той же вкладке — в демо-кабинет.
+  await page.click(`__ui.text('a', '^открыть кабинет')`, 'ссылка «Открыть кабинет»');
+  await page.waitFor(`/кабинет/i.test(document.title) && /8 лет/.test(document.body.innerText)`, { what: 'сохранённый поиск в кабинете' });
+  await page.goto(site.origin + '/lk/?demo=1&tab=favs');
+  await page.waitFor(`document.body.innerText.includes(${JSON.stringify(title)})`, { what: `«${title}» в избранном` });
   noErrors(page);
   await page.close();
 });

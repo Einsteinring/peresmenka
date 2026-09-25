@@ -55,13 +55,16 @@ async function boot() {
   wireControls();
   window.addEventListener('popstate', () => {
     q = parseQuery(location.search);
-    shown = PAGE;
+    shown = shownFromUrl();
     syncControls();
     renderAll();
+    restoreScroll();
   });
 
+  shown = shownFromUrl();
   syncControls();
   renderAll();
+  keepScroll();
 
   // Кабинет подключается после того, как поиск уже работает: он ничего
   // не загораживает и ничего не ждёт.
@@ -72,6 +75,45 @@ async function boot() {
     }
   });
   mountSaveBar();
+}
+
+/* ── возврат к тому же месту списка ──────────────────────────────────────── */
+
+// Сколько карточек раскрыто «Показать ещё» — в адресе, параметром show:
+// ушёл в карточку из конца списка, нажал «назад» — вернулся к тем же
+// 48 карточкам, а не к первым 12. Параметр не часть запроса (state.js его
+// не знает): любой новый фильтр начинает список сначала и show теряет.
+function shownFromUrl() {
+  const n = Number(new URLSearchParams(location.search).get('show'));
+  return Number.isInteger(n) && n > PAGE ? n : PAGE;
+}
+
+function writeShown() {
+  const p = new URLSearchParams(location.search);
+  if (shown > PAGE) p.set('show', String(shown));
+  else p.delete('show');
+  const search = p.toString();
+  window.history.replaceState(window.history.state, '', `${location.pathname}${search ? `?${search}` : ''}`);
+}
+
+// Позиция прокрутки — в состоянии записи истории. Браузер восстанавливает
+// её сам, но раньше, чем каталог загрузится и список нарисуется, — и
+// попадает в пустую страницу. Поэтому восстанавливаем сами, после отрисовки.
+function keepScroll() {
+  if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
+  let timer = 0;
+  const save = () => {
+    clearTimeout(timer);
+    window.history.replaceState({ ...(window.history.state || {}), y: Math.round(window.scrollY) }, '');
+  };
+  window.addEventListener('scroll', () => { clearTimeout(timer); timer = setTimeout(save, 200); }, { passive: true });
+  window.addEventListener('pagehide', save);
+  restoreScroll();
+}
+
+function restoreScroll() {
+  const y = window.history.state && window.history.state.y;
+  if (y > 0) window.scrollTo(0, y);
 }
 
 /* ── сохранить поиск и отслеживать группу ────────────────────────────────── */
@@ -685,6 +727,7 @@ function onResultsClick(e) {
     const first = shown;
     shown += PAGE;
     renderAll();
+    writeShown();
     // Список перерисован целиком, и фокус с исчезнувшей кнопки упал бы
     // в начало страницы. Ставим его на первую новую карточку.
     $('results').querySelectorAll('.card__title a')[first]?.focus();

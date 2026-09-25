@@ -389,19 +389,74 @@ test('ползунок возраста: стрелками меняет воз�
 /* ── 10. показать ещё ────────────────────────────────────────────────────── */
 
 // Новое в редизайне: выдача идёт страницами по 12 карточек (четыре ряда по
-// три), а не по 30. Кнопка обещает число и добавляет ровно столько.
-test('показать ещё: кнопка обещает число и добавляет ровно столько карточек', async () => {
+// три), а не по 30. Кнопка обещает число и добавляет ровно столько. После
+// «Показать ещё» трижды, ухода в карточку из конца списка и «назад»
+// возвращаются все показанные карточки и та же позиция прокрутки, а не
+// первые 12 с начала. То же — после перезагрузки: число живёт в адресе.
+test('показать ещё: добавляет обещанное, а «назад» возвращает весь список и место', async () => {
   const page = await open('/');
   const total = await count(page);
   const cards = `__ui.all('article').filter((a) => a.querySelector('h3')).length`;
-  const before = await page.eval(cards);
-  assert.ok(before > 0 && before < total, 'первая страница должна быть неполной');
+  let shown = await page.eval(cards);
+  assert.ok(shown > 0 && shown < total, 'первая страница должна быть неполной');
 
   const more = button('^показать ещё');
-  const promised = await page.eval(`Number((${more}).textContent.match(/(\\d+)/)[1])`);
-  await page.click(more, 'кнопка «Показать ещё»');
-  await page.waitFor(`${cards} === ${before + promised}`, { what: `${before + promised} карточек` });
+  for (let i = 0; i < 3; i++) {
+    const promised = await page.eval(`Number((${more}).textContent.match(/(\\d+)/)[1])`);
+    await page.click(more, 'кнопка «Показать ещё»');
+    await page.waitFor(`${cards} === ${shown + promised}`, { what: `${shown + promised} карточек` });
+    shown += promised;
+  }
   assert.equal(await count(page), total, 'счётчик не должен меняться');
+  assert.equal((await page.params()).show, String(shown), 'число показанных карточек должно быть в адресе');
+
+  // Последняя карточка списка: подводим её «Подробнее» к середине экрана и
+  // запоминаем место. Жмём кнопку, а не название: название в две строки, и
+  // центр его рамки приходится на промежуток между строками.
+  const last = `__ui.all('a[href]').filter((a) => /^подробнее$/i.test(__ui.norm(a.textContent))).pop()`;
+  const lastTitle = `__ui.norm((${last}).closest('article').querySelector('h3').textContent)`;
+  const title = await page.eval(`(() => { (${last}).scrollIntoView({ block: 'center' }); return ${lastTitle}; })()`);
+  await new Promise((r) => setTimeout(r, 400));
+  const y = await page.eval('Math.round(scrollY)');
+  assert.ok(y > 1000, 'карточка из конца списка должна быть далеко внизу');
+
+  await page.click(last, '«Подробнее» у последней карточки');
+  await page.waitFor(`location.pathname.startsWith('/g/')`, { what: 'страница группы' });
+
+  // «Назад» в браузере, потом перезагрузка: оба раза тот же список и то же место.
+  const back = `location.pathname === '/' && (${cards}) === ${shown} && Math.abs(scrollY - ${y}) < 4 &&
+    ${lastTitle} === ${JSON.stringify(title)}`;
+  await page.eval('setTimeout(() => history.back(), 0)');
+  await page.waitFor(back, { what: `после «назад»: ${shown} карточек и прокрутка ${y}`, timeout: 15000 });
+  await page.eval('setTimeout(() => location.reload(), 0)');
+  await page.waitFor(`document.readyState === 'complete' && !!window.__ui`, { timeout: 15000 });
+  await page.waitFor(back, { what: `после перезагрузки: ${shown} карточек и прокрутка ${y}`, timeout: 15000 });
+
+  noErrors(page);
+  await page.close();
+});
+
+// Карточки в ряду разной высоты: у одних пилюли расписания в два-три ряда.
+// Цена и «Подробнее» всё равно стоят на одной линии по всему ряду.
+test('карточки одного ряда: цена и «Подробнее» на одной линии', async () => {
+  const page = await open('/?kids=8');
+  const spread = await page.eval(`(() => {
+    const rows = new Map();
+    for (const card of __ui.all('article').filter((a) => a.querySelector('h3'))) {
+      const top = Math.round(card.getBoundingClientRect().top);
+      const go = [...card.querySelectorAll('a[href]')].find((a) => /^подробнее$/i.test(__ui.norm(a.textContent)));
+      const price = [...card.querySelectorAll('p')].find((p) => /₽\\/мес/.test(p.textContent));
+      if (!rows.has(top)) rows.set(top, []);
+      rows.get(top).push({ go: go.getBoundingClientRect().bottom, price: price.getBoundingClientRect().top });
+    }
+    let worst = 0;
+    for (const row of rows.values()) {
+      for (const k of ['go', 'price']) worst = Math.max(worst, Math.max(...row.map((c) => c[k])) - Math.min(...row.map((c) => c[k])));
+    }
+    return { worst, rows: [...rows.values()].filter((r) => r.length > 1).length };
+  })()`);
+  assert.ok(spread.rows >= 2, 'в выдаче должно быть хотя бы два ряда по несколько карточек');
+  assert.ok(spread.worst < 1, `нижняя строка разъехалась в ряду на ${spread.worst} px`);
   noErrors(page);
   await page.close();
 });

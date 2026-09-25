@@ -18,7 +18,7 @@ const OUT = join(ROOT, 'design', 'compare');
 mkdirSync(OUT, { recursive: true });
 
 // Какие секции сравниваем на этой контрольной точке.
-const SECTIONS = ['header', 'hero', 'tiles', 'steps', 'results'];
+const SECTIONS = ['header', 'hero', 'tiles', 'steps', 'results', 'footer'];
 
 const site = await startSite();
 const browser = await startBrowser();
@@ -44,7 +44,8 @@ const refB = await ref.eval(`(() => {
   const s = document.querySelectorAll('section');
   const t = (e) => e.getBoundingClientRect().top + scrollY;
   return { header: [0, t(s[0])], hero: [t(s[0]), t(s[1])], tiles: [t(s[1]), t(s[2])], steps: [t(s[2]), t(s[3])],
-    results: [t(s[3]), t(document.querySelector('footer'))] };
+    results: [t(s[3]), t(document.querySelector('footer'))],
+    footer: [t(document.querySelector('footer')), document.querySelector('footer').getBoundingClientRect().bottom + scrollY] };
 })()`);
 const refShots = await cut(ref, 'ref', refB, 1440);
 
@@ -56,9 +57,19 @@ const mineB = await mine.eval(`({
   hero: [${top('.hero')}, ${top('#napravleniya')}],
   tiles: [${top('#napravleniya')}, ${top('#podbor')}],
   steps: [${top('#podbor')}, ${top('#gruppy')}],
-  results: [${top('#gruppy')}, ${top('.foot')}]
+  results: [${top('#gruppy')}, ${top('.foot')}],
+  footer: [${top('.foot')}, ${bottom('.foot')}]
 })`);
 const mineShots = await cut(mine, 'site', mineB, 1440);
+// Подвал — в самом низу длинной страницы: снимок «за пределами окна» его
+// сдвигает. Прокручиваем к нему и снимаем заново, уже в пределах окна.
+{
+  await mine.eval('window.scrollTo(0, document.documentElement.scrollHeight)');
+  await new Promise((r) => setTimeout(r, 300));
+  const [y0, y1] = await mine.eval(`[${top('.foot')}, ${bottom('.foot')}]`);
+  writeFileSync(join(OUT, 'site-footer.png'), await mine.shot(y0, y1 - y0, 1440));
+  mineShots.footer = { file: 'site-footer.png', height: Math.round(y1 - y0) };
+}
 
 // ── шаги в заполненном состоянии, как нарисовано в эталоне: ребёнок 8 лет
 //    и пресет «После школы» ──
@@ -101,6 +112,35 @@ await resultsShot('/?kids=3&dir=plavanie', 'site-results-empty.png', 900);
   await new Promise((r) => setTimeout(r, 200));
   writeFileSync(join(OUT, 'site-results-cmp.png'), await p.shotViewport());
   await p.close();
+}
+
+// ── статика и кабинет: в эталоне их нет, снимаются в том же языке ──
+// Страница группы грузит карту OpenStreetMap: через прокси она иногда не
+// успевает, поэтому кадр снимается со второй попытки, а не роняет сборку.
+async function pageShot(path, file, width, height) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const p = await browser.open(`${site.origin}${path}`, { width, height: Math.min(height, 1400), mobile: width < 600 });
+      await p.waitFor('document.fonts.status === "loaded"');
+      await new Promise((r) => setTimeout(r, 500));
+      const h = await p.eval(`Math.min(${height}, document.documentElement.scrollHeight)`);
+      writeFileSync(join(OUT, file), await p.shot(0, h, width));
+      await p.close();
+      return;
+    } catch (err) {
+      if (attempt) throw err;
+    }
+  }
+}
+for (const [path, name] of [
+  ['/shahmaty/', 'static-list'],
+  ['/g/g001-shahmaty-endshpil-parnas/', 'static-group'],
+  ['/lk/?demo=1', 'lk'],
+  ['/lk/?demo=1&tab=saves', 'lk-saves'],
+  ['/lk/', 'lk-guest']
+]) {
+  await pageShot(path, `site-${name}.png`, 1440, name.startsWith('lk') ? 1300 : 1800);
+  if (!name.startsWith('lk-')) await pageShot(path, `site-390-${name}.png`, 390, 1600);
 }
 
 // ── сайт, вошедший (демо): колокольчик и профиль как в эталоне ──

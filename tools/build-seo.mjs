@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs';
 import { buildIndex, haversine, priceStats } from '../js/model.js';
 import { queryToSearch } from '../js/state.js';
 import { groupRow, esc, groupUrl } from '../js/render.js';
-import { coverSvg, dirIcon } from '../js/visual.js';
+import { cardTilt, coverSvg, dirIcon } from '../js/visual.js';
 import {
   DAY_SHORT, ageRange, dateShort, distance, groupsWord, intake, plural, price, span, time
 } from '../js/format.js';
@@ -36,15 +36,17 @@ const NOW = new Date();
 // которая есть на каждой странице. Собирается из каталога, а не из списка
 // в разметке, иначе после смены слага ссылка молча уводит в 404.
 const FOOT = `<footer class="foot">
-  <div class="foot__in">
-    <div>
-      <p class="foot__mark">Пересменка</p>
-      <p>Кружки и секции для детей в Петербурге. Демонстрационный проект: данные вымышлены,
-        записаться на самом деле нельзя.</p>
+  <svg class="foot__wave" viewBox="0 0 1440 50" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 30 C 120 0 240 0 360 30 S 600 60 720 30 S 960 0 1080 30 S 1320 60 1440 30 V50 H0z"/></svg>
+  <div class="foot__body">
+    <div class="foot__in shell">
+      <div class="foot__about">
+        <p class="foot__mark">Пересменка</p>
+        <p class="foot__text">Кружки и секции для детей в Петербурге. Демонстрационный проект: данные вымышлены, записаться на самом деле нельзя.</p>
+      </div>
+      <nav class="foot__dirs" aria-label="Направления">
+${index.directions.map((d) => `        <a href="/${d.slug}/">${esc(d.short || d.name)}</a>`).join('\n')}
+      </nav>
     </div>
-    <ul class="foot__dirs">
-${index.directions.map((d) => `      <li><a href="/${d.slug}/">${esc(d.short || d.name)}</a></li>`).join('\n')}
-    </ul>
   </div>
 </footer>`;
 
@@ -100,8 +102,9 @@ function layout({ title, description, canonical, crumbs, body, jsonld, dir }) {
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232A1E4A'/%3E%3Crect x='6' y='13' width='13' height='6' rx='3' fill='%23FF5A3C'/%3E%3Crect x='21' y='13' width='5' height='6' rx='2.5' fill='%23FFC93C'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Nunito:wght@400;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=Unbounded:wght@600;700;800&display=swap">
 <link rel="stylesheet" href="/css/app.css">
+<link rel="stylesheet" href="/css/site.css">
 <link rel="stylesheet" href="/css/page.css">
 <script type="application/ld+json">${JSON.stringify(crumbLd)}</script>
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ''}
@@ -109,19 +112,24 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script
 <body${dir ? ` data-dir="${esc(dir)}"` : ''}>
 <a class="skip" href="#main">К содержанию</a>
 
-<header class="top">
-  <div class="top__in">
-    <a class="mark" href="/"><span class="mark__badge" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none"><rect x="1.5" y="1.5" width="25" height="25" rx="8" fill="#ffc93c" stroke="#2a1e4a" stroke-width="2.5"/><circle cx="14" cy="14" r="6" stroke="#2a1e4a" stroke-width="2.5"/><circle cx="14" cy="14" r="2.4" fill="#ff6b4a"/></svg></span>Пересменка</a>
-    <nav class="top__nav" aria-label="Разделы сайта"><a href="/#tiles">Направления</a><a href="/#builder">Подбор</a><a href="/#results">Все группы</a></nav>
-    <div class="top__me"><a class="top__link" href="/lk/">Кабинет</a></div>
-  </div>
+<header class="head shell">
+  <a class="brand" href="/">
+    <span class="brand__badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12L12 3a9 9 0 0 1 9 9z" fill="#ff6b4a"/><path d="M12 12h9a9 9 0 0 1-9 9z" fill="#5ab0ff"/><path d="M12 12v9a9 9 0 0 1-9-9z" fill="#3dc9a6"/><path d="M12 12H3a9 9 0 0 1 9-9z" fill="#ff8fb8"/></svg></span>
+    <span class="brand__name">Пересменка</span>
+  </a>
+  <nav class="menu" aria-label="Основное меню">
+    <a href="/#napravleniya">Направления</a>
+    <a href="/#podbor">Подбор</a>
+    <a href="/#gruppy">Все группы</a>
+  </nav>
+  <div class="head__me"><a class="top__link profile profile--guest" href="/lk/"><span class="profile__av"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Кабинет</a></div>
 </header>
 
-<p class="demo-note"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>Демо-каталог: организации, педагоги, адреса и расписание вымышлены; районы и метро — настоящие.</p>
+<p class="note shell-note"><svg class="note__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>Демо-каталог: организации, педагоги, адреса и расписание вымышлены; районы и метро — настоящие.</span></p>
 
-<nav class="crumbs" aria-label="Хлебные крошки"><ol>${crumbHtml}</ol></nav>
+<nav class="crumbs shell" aria-label="Хлебные крошки"><ol>${crumbHtml}</ol></nav>
 
-<main class="wrap page" id="main">
+<main class="page shell" id="main">
 ${body}
 </main>
 
@@ -477,7 +485,7 @@ function renderGroupPage(g) {
   crumbs.push({ name: `${g.dir.short}: ${g.title}`, url });
 
   const body = `
-<div class="hero-cover">${coverSvg(g, 960, 120)}${dirIcon(g.direction, 22)}</div>
+<div class="hero-cover">${coverSvg(g, 960, 120)}<span class="hero-cover__badge" style="--tilt:${cardTilt(g)}deg">${dirIcon(g.direction, 40)}</span></div>
 <h1>${esc(g.dir.short)}: ${esc(g.title)}</h1>
 <p class="intro">${esc(g.org.name)} — ${esc(g.branch.address)}. Группа ${ageRange(g.ageFrom, g.ageTo)}, ${g.level === 'start' ? 'занимаются с нуля' : 'для продолжающих'}, до ${g.groupSize} ${plural(g.groupSize, 'человека', 'человек', 'человек')}.</p>
 

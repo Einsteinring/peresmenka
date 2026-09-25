@@ -57,7 +57,7 @@ function leadsView(state) {
       const steps = STAGES.filter((s) => s.id !== 'cancelled')
         .map((s, i) => {
           const state_ = l.status === 'cancelled' ? 'off' : i < done ? 'done' : i === done ? 'now' : 'off';
-          return `<li class="step step--${state_}">${esc(s.name)}</li>`;
+          return `<li class="lkc__step lkc__step--${state_}">${esc(s.name)}</li>`;
         })
         .join('');
 
@@ -72,7 +72,7 @@ function leadsView(state) {
           </p>
           <p class="lkc__meta">${esc(l.child)}, ${l.childAge} ${plural(l.childAge, 'год', 'года', 'лет')} · звонить ${esc(l.callTime)}</p>
           <p class="lkc__meta">Взять: ${esc(g.brings)}</p>
-          <ol class="steps">${steps}</ol>
+          <ol class="lkc__steps" aria-label="Стадии заявки">${steps}</ol>
           <div class="lkc__stage">
             <label>Стадия
               <select data-lead="${esc(l.id)}">

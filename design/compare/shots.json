@@ -19,6 +19,10 @@
     "results": {
       "file": "ref-results.png",
       "height": 729
+    },
+    "footer": {
+      "file": "ref-footer.png",
+      "height": 244
     }
   },
   "mineShots": {
@@ -40,7 +44,11 @@
     },
     "results": {
       "file": "site-results.png",
-      "height": 2568
+      "height": 2592
+    },
+    "footer": {
+      "file": "site-footer.png",
+      "height": 242
     }
   },
   "phones": [

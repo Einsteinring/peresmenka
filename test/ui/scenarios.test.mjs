@@ -571,8 +571,8 @@ test('возраст не задан: стрелка на ползунке и п
 // Нашлось на живом телефоне: на 360–393 px «школой» рвалось посередине —
 // «и школо / й». Правило: ни одно слово заголовка не разбито на две строки,
 // а самый широкий неразрывный кусок («и школой» склеен неразрывным
-// пробелом) занимает не больше 90% колонки: живой телефон рисует шрифт
-// примерно на 5% шире, чем браузер, в котором идёт проверка.
+// пробелом) занимает не больше 90% колонки — запас на различия в отрисовке
+// шрифтов между браузерами и устройствами.
 test('заголовок героя: слова не рвутся на ширинах 320–430', async () => {
   for (const w of [320, 360, 375, 390, 393, 412, 430]) {
     const page = await open('/', { width: w, height: 800, mobile: true });
@@ -597,5 +597,33 @@ test('заголовок героя: слова не рвутся на шири�
     assert.ok(r.share <= 0.9, `${w} px: самый широкий кусок заголовка занимает ${Math.round(r.share * 100)}% колонки — нет запаса на телефон`);
     noErrors(page);
     await page.close();
+  }
+});
+
+/* ── 14. страница не шире экрана на узких телефонах ──────────────────────── */
+
+// Нашлось при проверке: на 320 px шапка была шире экрана на 15–58 px —
+// «Войти», «Кабинет» или колокольчик с именем не помещались рядом со знаком.
+// Меряется без режима телефона: в нём браузер, как и живой телефон,
+// расширяет окно под вылезшее содержимое и отдаляет страницу, и перелив
+// маскируется. Здесь ширина окна честная, и вылезти некуда.
+test('страница и шапка не шире экрана на 320–430 px', async () => {
+  const pages = ['/', '/?demo=1', '/shahmaty/', '/lk/', '/lk/?demo=1'];
+  for (const w of [320, 360, 375, 390, 393, 412, 430]) {
+    for (const path of pages) {
+      const page = await browser.open(site.origin + path, { width: w, height: 800 });
+      await page.waitFor(`document.fonts.status === 'loaded' && !!__ui.all('header a')[0]`, { what: `${path} на ${w} px загрузилась` });
+      await new Promise((r) => setTimeout(r, 300));
+      const r = await page.eval(`(() => {
+        const cw = document.documentElement.clientWidth;
+        const right = Math.max(...[...document.querySelector('header').querySelectorAll('*')]
+          .filter((e) => e.getClientRects().length).map((e) => e.getBoundingClientRect().right));
+        return { page: document.documentElement.scrollWidth - cw, header: Math.round(right - cw) };
+      })()`);
+      assert.ok(r.page <= 0, `${path} на ${w} px шире экрана на ${r.page} px`);
+      assert.ok(r.header <= 0, `${path} на ${w} px шапка вылезает за экран на ${r.header} px`);
+      noErrors(page);
+      await page.close();
+    }
   }
 });

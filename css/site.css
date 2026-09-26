@@ -396,9 +396,9 @@ body { position: relative; overflow-x: clip; }
   /* Кегль — от ширины колонки заголовка, а не экрана: колонка = ширина
      героя − 92 px рисунка − 8 px зазора. Самый широкий неразрывный кусок —
      «и школой» (склеен неразрывным пробелом), 6,07 кегля; делитель 7
-     оставляет ему 86–87% колонки. Запас нужен: живой телефон рисует
-     заголовок примерно на 5% шире, чем браузер на компьютере (рвал при 96%
-     колонки и не рвал при 94%). Слова в заголовке не рвутся никогда: body
+     оставляет ему 86–87% колонки — запас на различия в отрисовке шрифтов
+     между браузерами и устройствами. Раньше кусок занимал 96–99% колонки
+     на 360–393 px. Слова в заголовке не рвутся никогда: body
      разрешает overflow-wrap: break-word, и на телефоне это давало «школо / й». */
   .hero { container-type: inline-size; }
   .hero__t {
@@ -410,6 +410,25 @@ body { position: relative; overflow-x: clip; }
   .cta { flex: 1 1 100%; justify-content: center; height: 56px; }
 
   .dirsec { padding-top: 40px; gap: 14px; }
+
+/* 320–374 px: знак, имя и пилюля «Войти» / «Кабинет» / имя вместе шире
+   экрана (на 320 — на 15–58 px). В пилюле остаётся только кружок со значком
+   или буквой; текст не убран из разметки, а сжат до нуля — у кнопки и
+   ссылки сохраняется доступное имя «Войти», «Кабинет» или имя человека. */
+@media (max-width: 374px) {
+  .head .profile { width: 42px; padding: 0; gap: 0; justify-content: center; font-size: 0; }
+  .head .profile .profile__av { font-size: 14px; }
+}
+/* Вошедшему рядом ещё колокольчик — ему кружок нужен до 419 px. */
+@media (max-width: 419px) {
+  .head__me:has(.bell) .profile { width: 42px; padding: 0; gap: 0; justify-content: center; font-size: 0; }
+  .head__me:has(.bell) .profile .profile__av { font-size: 14px; }
+}
+@media (max-width: 359px) {
+  .head { gap: 8px; }
+  .brand { gap: 8px; }
+  .brand__name { font-size: 17px; }
+}
   .sec-head__t { font-size: 24px; }
   .sec-head__sub { font-size: 15px; }
 }

@@ -285,11 +285,13 @@ async function openPage(port, url, { width, height, mobile }) {
       // Режим «за пределами экрана» временно растягивает вьюпорт на весь
       // документ, и вёрстка, зависящая от высоты окна, снимается не такой,
       // как на экране. Поэтому он включается, только если полоса не влезает.
+      // Координаты clip — от начала документа в обоих режимах. Раньше в
+      // режиме «в окне» передавалось y − scrollY, и на прокрученной
+      // странице снимался пустой, ещё не нарисованный верх документа.
       const inView = await page.eval(`scrollY <= ${y} && ${y + height} <= scrollY + innerHeight`);
-      const top = inView ? y - (await page.eval('scrollY')) : y;
       const r = await send('Page.captureScreenshot', {
         format: 'png', captureBeyondViewport: !inView,
-        clip: { x: 0, y: inView ? top : y, width, height, scale }
+        clip: { x: 0, y, width, height, scale }
       });
       return Buffer.from(r.data, 'base64');
     },

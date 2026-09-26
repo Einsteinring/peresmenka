@@ -542,6 +542,8 @@ test('возраст не задан: стрелка на ползунке и п
   const before = await count(page);
   const slider = labelled('^Возраст ребёнка 1, ползунок$');
   await page.waitFor(`!!(${slider})`, { what: 'ползунок первого ребёнка' });
+  // «Ещё» в кнопке — только когда первый ребёнок уже есть.
+  assert.ok(await page.eval(`!!${button('^добавить ребёнка$')}`), 'до первого ребёнка кнопка — «Добавить ребёнка»');
   const rest = Number(await page.eval(`(${slider}).value`));
   await page.eval(`(${slider}).focus()`);
 
@@ -552,6 +554,7 @@ test('возраст не задан: стрелка на ползунке и п
   await page.key('ArrowRight');
   await page.waitFor(`new URLSearchParams(location.search).get('kids') === '${rest + 2}'`, { what: `kids=${rest + 2} после второй стрелки` });
   assert.notEqual(await count(page), before, 'фильтр по возрасту должен включиться');
+  assert.ok(await page.eval(`!!${button('^добавить ещё ребёнка$')}`), 'после первого ребёнка кнопка — «Добавить ещё ребёнка»');
   noErrors(page);
   await page.close();
 
@@ -561,4 +564,38 @@ test('возраст не задан: стрелка на ползунке и п
   assert.equal(await typed.eval(`(${slider}).value`), '12', 'ползунок не встал на возраст из поля');
   noErrors(typed);
   await typed.close();
+});
+
+/* ── 13. заголовок героя на узких телефонах ──────────────────────────────── */
+
+// Нашлось на живом телефоне: на 360–393 px «школой» рвалось посередине —
+// «и школо / й». Правило: ни одно слово заголовка не разбито на две строки,
+// а самый широкий неразрывный кусок («и школой» склеен неразрывным
+// пробелом) занимает не больше 90% колонки: живой телефон рисует шрифт
+// примерно на 5% шире, чем браузер, в котором идёт проверка.
+test('заголовок героя: слова не рвутся на ширинах 320–430', async () => {
+  for (const w of [320, 360, 375, 390, 393, 412, 430]) {
+    const page = await open('/', { width: w, height: 800, mobile: true });
+    const r = await page.eval(`(() => {
+      const h = __ui.all('h1')[0];
+      const col = h.getBoundingClientRect().width;
+      const broken = [];
+      let widest = 0;
+      const walker = document.createTreeWalker(h, NodeFilter.SHOW_TEXT);
+      for (let n; (n = walker.nextNode());) {
+        for (const m of n.textContent.matchAll(/[^ \\t\\n\\r]+/g)) {
+          const range = document.createRange();
+          range.setStart(n, m.index);
+          range.setEnd(n, m.index + m[0].length);
+          if (new Set([...range.getClientRects()].map((q) => Math.round(q.top))).size > 1) broken.push(m[0]);
+          widest = Math.max(widest, range.getBoundingClientRect().width);
+        }
+      }
+      return { broken, share: widest / col };
+    })()`);
+    assert.deepEqual(r.broken, [], `${w} px: слово разорвано на две строки`);
+    assert.ok(r.share <= 0.9, `${w} px: самый широкий кусок заголовка занимает ${Math.round(r.share * 100)}% колонки — нет запаса на телефон`);
+    noErrors(page);
+    await page.close();
+  }
 });

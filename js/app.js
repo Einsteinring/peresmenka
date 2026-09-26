@@ -323,9 +323,8 @@ function findPlace(text) {
 }
 
 function wireControls() {
-  // Кнопка всегда «Добавить ещё ребёнка»: первый — это ползунок над ней.
-  // Если его ещё не трогали, кнопка задаёт первому возраст, на котором
-  // стоит бегунок, — прибавлять «ещё» не к чему.
+  // Пока ребёнка нет, кнопка «Добавить ребёнка» задаёт первому возраст, на
+  // котором стоит бегунок пустого ползунка; дальше она «Добавить ещё».
   $('add-kid').addEventListener('click', () => {
     const ages = q.children.length
       ? [...q.children, { age: 8, name: '' }]
@@ -624,6 +623,8 @@ function syncControls() {
   const empty = q.children.length === 0;
   if (empty) kids.append(emptyKidRow());
   $('add-kid').hidden = q.children.length >= 4;
+  // «Ещё» — только когда уже есть кого считать.
+  $('add-kid').textContent = empty ? 'Добавить ребёнка' : 'Добавить ещё ребёнка';
   $('who-empty').hidden = !empty;
   $('who-hint').hidden = empty;
 

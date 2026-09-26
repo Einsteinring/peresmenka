@@ -23,21 +23,29 @@ export function parseCookies(req) {
   return out;
 }
 
+// Атрибуты куки — одни на вход и на выход. Браузер гасит куку, только если
+// совпали имя, Path и Domain; Secure и SameSite тоже держим одинаковыми,
+// чтобы выход не зависел от того, насколько снисходителен браузер.
+// Domain не задаётся нигде: кука живёт только на своём хосте.
+function cookieAttrs() {
+  const secure = (process.env.SITE_ORIGIN || '').startsWith('https://') ? '; Secure' : '';
+  return `HttpOnly${secure}; SameSite=Lax; Path=/`;
+}
+
 export async function startSession(res, uid) {
   const token = randomBytes(24).toString('base64url');
   await command('SET', `sess:${token}`, String(uid), 'EX', TTL);
-  const secure = (process.env.SITE_ORIGIN || '').startsWith('https://') ? '; Secure' : '';
-  res.setHeader(
-    'Set-Cookie',
-    `${COOKIE}=${token}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=${TTL}`
-  );
+  res.setHeader('Set-Cookie', `${COOKIE}=${token}; ${cookieAttrs()}; Max-Age=${TTL}`);
   return token;
 }
 
+// Выход: сессия удаляется из хранилища — старая кука после этого ничего не
+// открывает, даже если браузер её не забыл. Кука гасится с теми же
+// атрибутами. Без сессии тоже не ошибка: гасить нечего, ответ тот же.
 export async function endSession(req, res) {
   const token = parseCookies(req)[COOKIE];
   if (token) await del(`sess:${token}`);
-  res.setHeader('Set-Cookie', `${COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`);
+  res.setHeader('Set-Cookie', `${COOKIE}=; ${cookieAttrs()}; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`);
 }
 
 export async function currentUser(req) {

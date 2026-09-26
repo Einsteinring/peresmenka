@@ -296,6 +296,28 @@ export async function mountTopbar(root, { onState } = {}) {
   }
 
   const unread = state.unread || 0;
+  const initial = esc((state.user.first_name || 'К').slice(0, 1));
+  const name = esc(state.user.first_name || 'Кабинет');
+  // Профиль вошедшего — меню «Кабинет / Выйти»: на широком экране под
+  // пилюлей, на телефоне шторкой снизу. «Выйти» — обычная форма POST, она
+  // работает и без скрипта; сервер гасит сессию и отвечает переходом на
+  // экран входа. В демо сессии нет (демо держится на ?demo=1 и хранилище
+  // вкладки), поэтому там профиль остаётся ссылкой, а выход из демо — на
+  // плашке кабинета.
+  const profile = isDemo()
+    ? `<a class="top__link profile" href="/lk/"><span class="profile__av" aria-hidden="true">${initial}</span>${name}</a>`
+    : `<div class="me">
+        <button type="button" class="top__link profile" id="me-btn" aria-expanded="false" aria-controls="me-drop">
+          <span class="profile__av" aria-hidden="true">${initial}</span>${name}
+        </button>
+        <div class="me__drop" id="me-drop" hidden>
+          <p class="me__who">${esc([state.user.first_name, state.user.last_name].filter(Boolean).join(' ') || 'Вы вошли')}</p>
+          <a class="me__link" href="/lk/">Кабинет</a>
+          <form class="me__out" method="post" action="/api/auth/logout/">
+            <button type="submit" class="me__btn">Выйти</button>
+          </form>
+        </div>
+      </div>`;
   root.innerHTML = `
     <div class="bell">
       <button type="button" class="bell__btn roundbtn" id="bell-btn" aria-expanded="false"
@@ -304,10 +326,26 @@ export async function mountTopbar(root, { onState } = {}) {
       </button>
       <div class="bell__drop" id="bell-drop" hidden></div>
     </div>
-    <a class="top__link profile" href="/lk/"><span class="profile__av" aria-hidden="true">${esc((state.user.first_name || 'К').slice(0, 1))}</span>${esc(state.user.first_name || 'Кабинет')}</a>`;
+    ${profile}`;
 
   const btn = root.querySelector('#bell-btn');
   const drop = root.querySelector('#bell-drop');
+  const meBtn = root.querySelector('#me-btn');
+  const meDrop = root.querySelector('#me-drop');
+  const closeMe = () => {
+    if (!meDrop || meDrop.hidden) return;
+    meDrop.hidden = true;
+    meBtn.setAttribute('aria-expanded', 'false');
+  };
+  if (meBtn) {
+    meBtn.addEventListener('click', () => {
+      const open = meDrop.hidden;
+      close();
+      meDrop.hidden = !open;
+      meBtn.setAttribute('aria-expanded', String(open));
+      if (open) meDrop.querySelector('.me__link').focus();
+    });
+  }
 
   const paint = () => {
     const notes = state.notes || [];
@@ -334,6 +372,7 @@ export async function mountTopbar(root, { onState } = {}) {
 
   btn.addEventListener('click', () => {
     const open = drop.hidden;
+    closeMe();
     drop.hidden = !open;
     btn.setAttribute('aria-expanded', String(open));
     if (open) paint();
@@ -355,13 +394,19 @@ export async function mountTopbar(root, { onState } = {}) {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !drop.hidden) {
+    if (e.key !== 'Escape') return;
+    if (!drop.hidden) {
       close();
       btn.focus();
+    } else if (meDrop && !meDrop.hidden) {
+      closeMe();
+      meBtn.focus();
     }
   });
   document.addEventListener('click', (e) => {
     if (!drop.hidden && !root.contains(e.target)) close();
+    // Шторка на телефоне лежит поверх страницы: касание мимо неё закрывает.
+    if (meDrop && !meDrop.hidden && !meDrop.contains(e.target) && !meBtn.contains(e.target)) closeMe();
   });
 
   return state;

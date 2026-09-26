@@ -63,6 +63,10 @@ function edgePath() {
 // Свой сервер на свободном порту. Ключи Upstash и Telegram заданы пустыми
 // строками намеренно: tools/serve.mjs не перетирает уже заданное, и без этого
 // он подхватил бы настоящий .env — сценарии писали бы в боевую базу.
+// Секрет вебхука — тестовый: сценарий входа сам играет роль Telegram и
+// стучится в /api/tg/webhook/. Без токена бота ответы бота никуда не уходят.
+const WEBHOOK_SECRET = 'ui-test-webhook-secret';
+
 export async function startSite() {
   const port = await freePort();
   const env = {
@@ -71,7 +75,7 @@ export async function startSite() {
     UPSTASH_REDIS_REST_URL: '',
     UPSTASH_REDIS_REST_TOKEN: '',
     TELEGRAM_BOT_TOKEN: '',
-    TELEGRAM_WEBHOOK_SECRET: '',
+    TELEGRAM_WEBHOOK_SECRET: WEBHOOK_SECRET,
     TELEGRAM_BOT_USERNAME: 'peresmenka_test_bot',
     SITE_ORIGIN: `http://127.0.0.1:${port}`,
     CRON_SECRET: ''
@@ -79,7 +83,7 @@ export async function startSite() {
   const proc = spawn(process.execPath, [join(ROOT, 'tools', 'serve.mjs')], { cwd: ROOT, env, stdio: 'ignore' });
   const origin = `http://127.0.0.1:${port}`;
   await waitHttp(`${origin}/`);
-  return { origin, stop: () => proc.kill() };
+  return { origin, webhookSecret: WEBHOOK_SECRET, stop: () => proc.kill() };
 }
 
 /* ── браузер ─────────────────────────────────────────────────────────────── */
@@ -161,6 +165,7 @@ async function openPage(port, url, { width, height, mobile }) {
   });
 
   await send('Page.enable');
+  await send('Network.enable');
   await send('Runtime.enable');
   await send('Page.addScriptToEvaluateOnNewDocument', { source: FINDERS });
   await send('Emulation.setDeviceMetricsOverride', {
@@ -249,6 +254,15 @@ async function openPage(port, url, { width, height, mobile }) {
     async wheel(dy, at = { x: 100, y: 200 }) {
       await send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: at.x, y: at.y, deltaX: 0, deltaY: dy });
       await sleep(250);
+    },
+
+    // Куки вкладки, включая httpOnly: со страницы их не видно, только по CDP.
+    async cookies() {
+      const r = await send('Network.getCookies', {});
+      return r.cookies;
+    },
+    async setCookie(name, value, url) {
+      await send('Network.setCookie', { name, value, url, path: '/', httpOnly: true, sameSite: 'Lax' });
     },
 
     // Поворот телефона: та же вкладка, новые размеры окна и ориентация.

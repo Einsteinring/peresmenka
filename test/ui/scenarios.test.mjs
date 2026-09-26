@@ -627,3 +627,85 @@ test('страница и шапка не шире экрана на 320–430 p
     }
   }
 });
+
+/* ── 15. выход ───────────────────────────────────────────────────────────── */
+
+// Вход настоящей цепочкой, только роль Telegram играет сам сценарий: он
+// стучится в вебхук тестового сайта с тестовым секретом — «/start» по ссылке
+// со страницы и нажатие «Подтвердить». Страница сама замечает подтверждение
+// и перезагружается уже с сессией. Затем «Выйти» — форма POST: экран входа,
+// куки сессии нет, а старая кука, подложенная обратно, кабинет не открывает —
+// сессия удалена в хранилище, а не только в браузере.
+let tgUpdate = 1;
+
+async function loginWithTestBot(page, userId) {
+  await page.click(button('^войти$'), 'кнопка «Войти» в шапке');
+  await page.click(button('через приложение telegram'), '«Войти через приложение Telegram»');
+  const nonce = await page.waitFor(`(() => {
+    const a = __ui.all('a[href*="t.me/"]')[0];
+    return a && new URL(a.href).searchParams.get('start');
+  })()`, { what: 'ссылка на бота с заявкой' });
+
+  const from = { id: userId, is_bot: false, first_name: 'Тестовый', username: `ui_test_${userId}` };
+  const hook = async (update) => {
+    const r = await fetch(`${site.origin}/api/tg/webhook/`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-telegram-bot-api-secret-token': site.webhookSecret },
+      body: JSON.stringify({ update_id: tgUpdate++, ...update })
+    });
+    assert.equal(r.status, 200, 'вебхук тестового сайта не принял обновление');
+  };
+  await hook({ message: { message_id: 1, from, chat: { id: userId, type: 'private' }, date: Math.floor(Date.now() / 1000), text: `/start ${nonce}` } });
+  await hook({ callback_query: { id: `cb${userId}`, from, data: `ok:${nonce}`, message: { message_id: 2, chat: { id: userId } } } });
+
+  await page.waitFor(`!!__ui.text('button', 'тестовый$')`, { what: 'профиль «Тестовый» в шапке после входа', timeout: 20000 });
+  const cookie = (await page.cookies()).find((c) => c.name === 'ps_session');
+  assert.ok(cookie && cookie.value, 'после входа должна быть кука сессии');
+  return cookie.value;
+}
+
+const sessionCookie = async (page) => (await page.cookies()).find((c) => c.name === 'ps_session');
+const cabinetTabs = `__ui.all('[role="tab"]').length`;
+const loginScreen = `location.pathname === '/lk/' && /нужен вход/i.test(document.body.innerText) && ${cabinetTabs} === 0`;
+
+test('выход: «Выйти» гасит сессию, старая кука кабинет не открывает, на телефоне кнопка в шторке', async () => {
+  const page = await open('/');
+  const old = await loginWithTestBot(page, 700101);
+
+  await page.goto(`${site.origin}/lk/`);
+  await page.waitFor(`${cabinetTabs} === 3`, { what: 'кабинет вошедшего с тремя вкладками' });
+
+  await page.click(button('тестовый$'), 'профиль в шапке');
+  await page.click(button('^выйти$'), 'кнопка «Выйти»');
+  await page.waitFor(loginScreen, { what: 'экран входа после выхода', timeout: 15000 });
+  assert.equal(await sessionCookie(page), undefined, 'после выхода куки сессии быть не должно');
+
+  // Старая кука обратно в браузер — кабинет всё равно не открывается.
+  await page.setCookie('ps_session', old, site.origin);
+  await page.goto(`${site.origin}/lk/`);
+  await page.waitFor(loginScreen, { what: 'со старой кукой — снова экран входа', timeout: 15000 });
+  const me = await fetch(`${site.origin}/api/me/`, { headers: { cookie: `ps_session=${old}` } }).then((r) => r.json());
+  assert.equal(me.user, null, 'старая кука не должна давать пользователя');
+  const saves = await fetch(`${site.origin}/api/saves/`, { headers: { cookie: `ps_session=${old}` } });
+  assert.equal(saves.status, 401, 'старая кука не должна открывать данные кабинета');
+  noErrors(page);
+  await page.close();
+
+  // Телефон: профиль — кружок, по нему шторка снизу, в ней «Выйти».
+  const phone = await open('/', { width: 390, height: 844, mobile: true });
+  await loginWithTestBot(phone, 700102);
+  await phone.click(button('тестовый$'), 'профиль-кружок в шапке');
+  const sheet = await phone.waitFor(`(() => {
+    const b = __ui.text('button', '^выйти$');
+    if (!b) return null;
+    const r = b.getBoundingClientRect(), d = b.closest('[id]').getBoundingClientRect();
+    return { buttonBottom: r.bottom, sheetBottom: d.bottom, sheetTop: d.top, fixed: getComputedStyle(b.closest('[id]')).position === 'fixed' };
+  })()`, { what: 'кнопка «Выйти» в шторке' });
+  assert.ok(sheet.fixed && Math.abs(sheet.sheetBottom - 844) < 2, 'на телефоне меню профиля — шторка у нижнего края');
+  assert.ok(sheet.buttonBottom <= 844, 'кнопка «Выйти» должна быть на экране');
+  await phone.click(button('^выйти$'), '«Выйти» в шторке');
+  await phone.waitFor(loginScreen, { what: 'экран входа после выхода с телефона', timeout: 15000 });
+  assert.equal(await sessionCookie(phone), undefined);
+  noErrors(phone);
+  await phone.close();
+});

@@ -94,6 +94,48 @@ await frame('lk-bell-1440.png', '/lk/?demo=1', {
 });
 await frame('lk-favs-1440.png', '/lk/?demo=1&tab=favs', { wait: `${ready} && !!document.querySelector('.lkc')` });
 
+// ── меню профиля вошедшего: «Кабинет» и «Выйти» ──
+// Демо — не сессия, там меню нет. Поэтому вход настоящий, как в сценарии
+// выхода: роль Telegram играет скрипт — «/start» и «Подтвердить» в вебхук
+// тестового сайта с тестовым секретом. Боевой бот и база не задеваются.
+let tgUpdate = 1;
+async function loginWithTestBot(page, userId, firstName) {
+  await page.click(`__ui.text('button', '^войти$')`);
+  await page.click(`__ui.text('button', 'через приложение telegram')`);
+  const nonce = await page.waitFor(`(() => { const a = __ui.all('a[href*="t.me/"]')[0]; return a && new URL(a.href).searchParams.get('start'); })()`);
+  const from = { id: userId, is_bot: false, first_name: firstName };
+  for (const update of [
+    { message: { message_id: 1, from, chat: { id: userId, type: 'private' }, date: Math.floor(Date.now() / 1000), text: `/start ${nonce}` } },
+    { callback_query: { id: `cb${userId}`, from, data: `ok:${nonce}`, message: { message_id: 2, chat: { id: userId } } } }
+  ]) {
+    await fetch(`${site.origin}/api/tg/webhook/`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-telegram-bot-api-secret-token': site.webhookSecret },
+      body: JSON.stringify({ update_id: tgUpdate++, ...update })
+    });
+  }
+  await page.waitFor(`!!document.getElementById('me-btn')`, { timeout: 20000, what: 'вход тестовым ботом' });
+}
+for (const [file, width, phone, userId] of [['logout-1440.png', 1440, false, 800101], ['logout-390.png', 390, true, 800102]]) {
+  const page = await browser.open(`${site.origin}/`, { width, height: phone ? 844 : 760, mobile: phone });
+  await page.waitFor(home, { timeout: 20000 });
+  await loginWithTestBot(page, userId, 'Ольга');
+  await page.goto(`${site.origin}/lk/`);
+  await page.waitFor(`${ready} && __ui.all('[role="tab"]').length === 3`, { timeout: 20000, what: `${file}: кабинет` });
+  await page.click(`document.getElementById('me-btn')`);
+  await page.waitFor(`!document.getElementById('me-drop').hidden`);
+  await page.eval('window.scrollTo(0, 0)');
+  await pause(500);
+  writeFileSync(join(OUT, file), await page.shot(0, phone ? 844 : 760, width, phone ? 2 : 1));
+  if (page.errors.length) console.warn(`${file}: ошибки в консоли — ${page.errors.join(' | ')}`);
+  // Вкладки делят куки: выходим той же кнопкой, иначе следующий кадр
+  // откроется уже вошедшим.
+  await page.click(`__ui.text('button', '^выйти$')`);
+  await page.waitFor(`location.pathname === '/lk/' && !document.getElementById('me-btn') && /нужен вход/i.test(document.body.innerText)`, { timeout: 15000 });
+  await page.close();
+  console.log('готово', file);
+}
+
 // ── телефон ──
 await frame('search-390.png', '/?kids=8', { width: 390, height: 844, phone: true, wait: home, from: topOf('#gruppy', 12) });
 await frame('sheet-390.png', '/?kids=8', {

@@ -321,6 +321,28 @@ body { position: relative; overflow-x: clip; }
   .hero__lead { font-size: 19px; }
 }
 
+/* Телефон в горизонтали: по ширине это планшет (740–932 px), а высота всего
+   360–430. Правило «рисунок над текстом» съедало весь первый экран: ни
+   заголовка, ни кнопки. Здесь рисунок уменьшен и стоит справа от текста. */
+@media (max-width: 1023px) and (max-height: 500px) and (orientation: landscape) {
+  .hero { flex-direction: row; align-items: center; gap: 24px; padding-top: 16px; }
+  .hero__art { --k: .44; order: 0; align-self: center; margin: 0; }
+  .hero__col { gap: 14px; }
+  .hero__t { font-size: 38px; letter-spacing: -1px; }
+  .hero__lead { font-size: 16px; }
+}
+/* Самые низкие — 360–400 px: рисунок ещё меньше, заголовок и плашка плотнее,
+   иначе кнопка героя остаётся под нижним краем первого экрана. */
+@media (max-width: 1023px) and (max-height: 400px) and (orientation: landscape) {
+  .head { padding-top: 12px; }
+  .hero { padding-top: 10px; gap: 16px; }
+  .hero__art { --k: .36; }
+  .hero__col { gap: 10px; }
+  .note { font-size: 13px; padding: 5px 12px 5px 8px; }
+  .hero__t { font-size: 32px; }
+  .hero__lead { font-size: 15px; line-height: 1.4; }
+}
+
 /* ── телефон (в эталоне его нет) ─────────────────────────────────────────── */
 
 /* Лента плиток — на всём, что уже 1024: на планшете пять колонок по
@@ -478,20 +500,6 @@ body { position: relative; overflow-x: clip; }
 /* ── шаг 1: кому ─────────────────────────────────────────────────────────── */
 
 .kidbox { padding: 22px 18px 18px; background: #fff1f6; border-radius: 20px; display: flex; flex-direction: column; gap: 14px; }
-.kids:empty { display: none; }
-
-.agescale { display: flex; flex-direction: column; gap: 14px; }
-.agescale__track {
-  position: relative; display: block; height: 8px; margin: 13px 0;
-  border-radius: 999px; background: #ffd3e4; border: 2px solid var(--ink);
-}
-.agescale__knob {
-  position: absolute; left: 38%; top: 50%; transform: translate(-50%, -50%);
-  width: 30px; height: 30px; box-sizing: border-box; border-radius: 999px;
-  background: var(--white); border: 3px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
-}
-.agescale__marks { display: flex; justify-content: space-between; font-family: var(--f-disp); font-size: 13px; font-weight: 600; }
-
 .kids { display: flex; flex-direction: column; gap: 16px; }
 .kid { display: flex; flex-direction: column; gap: 10px; }
 .kid + .kid { padding-top: 16px; border-top: 2px dashed #ffb8d2; }
@@ -518,6 +526,20 @@ body { position: relative; overflow-x: clip; }
 }
 
 .kid__line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+/* Возраст не задан: тот же ползунок, но приглушённый — бледная дорожка без
+   заливки и пунктирный бегунок. Как только его тронули, он оживает. */
+.kid__marks { display: flex; justify-content: space-between; margin-top: -4px; padding: 0 6px; font: 600 13px var(--f-disp); }
+.kid--empty .kid__slider { --p: 0%; }
+.kid--empty .kid__slider::-webkit-slider-runnable-track { background: #ffe3ee; border-color: #b7a3c4; }
+.kid--empty .kid__slider::-moz-range-track { background: #ffe3ee; border-color: #b7a3c4; }
+.kid--empty .kid__slider::-webkit-slider-thumb { background: #fff7fa; border-style: dashed; box-shadow: none; }
+.kid--empty .kid__slider::-moz-range-thumb { background: #fff7fa; border-style: dashed; box-shadow: none; }
+.kid--empty.kid--live .kid__slider::-webkit-slider-runnable-track { background: linear-gradient(90deg, var(--pink) var(--p), #ffd3e4 var(--p)); border-color: var(--ink); }
+.kid--empty.kid--live .kid__slider::-webkit-slider-thumb { background: var(--white); border-style: solid; box-shadow: 2px 2px 0 var(--ink); }
+.kid--empty .kid__marks { color: #6f6590; }
+.kid__hint { font: 800 14px/1.3 var(--f-body); color: #6f6590; }
+.kid--empty .kid__slider:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; border-radius: 12px; }
 .kid__agebox {
   flex: none; height: 40px; box-sizing: border-box; padding: 0 10px 0 6px;
   display: flex; align-items: center; gap: 2px;

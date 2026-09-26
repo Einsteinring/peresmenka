@@ -323,8 +323,13 @@ function findPlace(text) {
 }
 
 function wireControls() {
+  // Кнопка всегда «Добавить ещё ребёнка»: первый — это ползунок над ней.
+  // Если его ещё не трогали, кнопка задаёт первому возраст, на котором
+  // стоит бегунок, — прибавлять «ещё» не к чему.
   $('add-kid').addEventListener('click', () => {
-    const ages = [...q.children, { age: 8, name: '' }];
+    const ages = q.children.length
+      ? [...q.children, { age: 8, name: '' }]
+      : [{ age: EMPTY_REST, name: '' }];
     apply({ children: ages });
     const inputs = $('kids').querySelectorAll('.kid__age');
     if (inputs.length) inputs[inputs.length - 1].focus();
@@ -430,9 +435,20 @@ function watchHeroButton(button) {
     bar.dataset.away = '1';
     return;
   }
+  // «Ушла за край» — только вверх: страницу прокрутили мимо кнопки. Если
+  // кнопка ниже нижнего края (телефон в горизонтали, где первый экран ниже
+  // героя), до неё ещё не дошли — и полоса-замена ей не нужна. Раньше
+  // проверялось только «видна ли», и в горизонтали полоса вставала на
+  // первый экран, а при прокрутке к кнопке пряталась — наоборот.
+  //
+  // Поэтому область наблюдения продлена далеко вниз: граница у неё одна —
+  // верхний край экрана. Проверять «ниже или выше» по координатам в
+  // обработчике нельзя: быстрый рывок проносит кнопку из-под нижнего края
+  // сразу за верхний, «не видна → не видна» — не пересечение, и обработчик
+  // не срабатывает вовсе.
   new IntersectionObserver(([entry]) => {
     bar.dataset.away = entry.isIntersecting ? '0' : '1';
-  }).observe(button);
+  }, { rootMargin: '0px 0px 100000px 0px' }).observe(button);
 }
 
 function locate() {
@@ -465,6 +481,76 @@ function locate() {
 }
 
 /* ── синхронизация контролов с состоянием ────────────────────────────────── */
+
+// Пока возраст не задан, на подложке — настоящий ползунок, а не рисунок:
+// нарисованную шкалу пытались тянуть. Он приглушён и подписан «потяните»,
+// фильтра по возрасту нет, число групп не меняется. Первое касание,
+// протяжка или стрелка с клавиатуры создают первого ребёнка с этим
+// возрастом; поле с числом рядом работает так же.
+const EMPTY_REST = 10;
+
+function emptyKidRow() {
+  const row = document.createElement('div');
+  row.className = 'kid kid--empty';
+
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.className = 'kid__slider';
+  slider.min = '3';
+  slider.max = '17';
+  slider.value = String(EMPTY_REST);
+  slider.setAttribute('aria-label', 'Возраст ребёнка 1, ползунок');
+  slider.setAttribute('aria-valuetext', 'не задан');
+  slider.style.setProperty('--p', `${((EMPTY_REST - 3) / 14) * 100}%`);
+
+  const marks = document.createElement('span');
+  marks.className = 'kid__marks';
+  marks.setAttribute('aria-hidden', 'true');
+  marks.innerHTML = [3, 5, 7, 9, 11, 13, 15, 17].map((n) => `<span>${n}</span>`).join('');
+
+  const age = document.createElement('input');
+  age.type = 'number';
+  age.className = 'kid__age num';
+  age.min = '2';
+  age.max = '18';
+  age.placeholder = '?';
+  age.setAttribute('aria-label', 'Возраст ребёнка 1');
+
+  const ageBox = document.createElement('label');
+  ageBox.className = 'kid__agebox';
+  ageBox.append(age, document.createTextNode(' лет'));
+
+  const hint = document.createElement('span');
+  hint.className = 'kid__hint';
+  hint.textContent = 'Потяните — или впишите возраст';
+
+  const line = document.createElement('div');
+  line.className = 'kid__line';
+  line.append(ageBox, hint);
+  row.append(slider, marks, line);
+
+  // Ребёнок появляется один раз: после apply эта строка уже заменена
+  // настоящей, а поздний click от того же касания сюда не дойдёт.
+  const create = (value) => {
+    if (q.children.length) return;
+    const keepFocus = document.activeElement === slider;
+    apply({ children: [{ age: value, name: '' }] });
+    if (keepFocus) $('kids').querySelector('.kid__slider')?.focus();
+  };
+  slider.addEventListener('input', () => {
+    row.classList.add('kid--live');
+    age.value = slider.value;
+    slider.style.setProperty('--p', `${((slider.value - 3) / 14) * 100}%`);
+  });
+  slider.addEventListener('change', () => create(Number(slider.value)));
+  // Касание прямо по бегунку без сдвига не даёт ни input, ни change.
+  slider.addEventListener('click', () => create(Number(slider.value)));
+  age.addEventListener('change', () => {
+    if (age.value === '' || !Number.isFinite(Number(age.value))) return;
+    create(Math.min(18, Math.max(2, Math.round(Number(age.value)))));
+  });
+  return row;
+}
 
 function syncControls() {
   // дети
@@ -535,21 +621,11 @@ function syncControls() {
     row.append(slider, line);
     kids.append(row);
   });
-  $('add-kid').hidden = q.children.length >= 4;
-  $('add-kid').textContent = q.children.length ? 'Добавить ещё ребёнка' : 'Указать возраст';
-
-  // Пока детей нет, на розовой подложке — шкала возраста, как в эталоне:
-  // она показывает, что здесь будет ползунок. Это рисунок, а не контрол.
-  const noKids = $('no-kids');
   const empty = q.children.length === 0;
-  noKids.hidden = !empty;
+  if (empty) kids.append(emptyKidRow());
+  $('add-kid').hidden = q.children.length >= 4;
   $('who-empty').hidden = !empty;
   $('who-hint').hidden = empty;
-  if (empty && !noKids.dataset.filled) {
-    noKids.dataset.filled = '1';
-    noKids.innerHTML = '<span class="agescale__track"><span class="agescale__knob"></span></span>' +
-      `<span class="agescale__marks">${[3, 5, 7, 9, 11, 13, 15, 17].map((n) => `<span>${n}</span>`).join('')}</span>`;
-  }
 
   // режимы географии
   for (const input of $('modes').querySelectorAll('input')) {

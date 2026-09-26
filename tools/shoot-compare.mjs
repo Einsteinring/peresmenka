@@ -194,6 +194,15 @@ for (const [path, file, prep] of [
   await p.close();
 }
 
+// ── телефон в горизонтали: первый экран, полосы «Фильтры» на нём нет ──
+for (const [w, h] of [[844, 390], [740, 360]]) {
+  const p = await browser.open(`${site.origin}/`, { width: w, height: h, mobile: true });
+  await p.waitFor('document.querySelectorAll(".tile").length === 9 && document.fonts.status === "loaded"');
+  await new Promise((r) => setTimeout(r, 400));
+  writeFileSync(join(OUT, `site-land-${w}.png`), await p.shotViewport());
+  await p.close();
+}
+
 // ── шторка на телефоне: открыта, наверху и прокрученная к шагу 3 ──
 {
   const p = await browser.open(`${site.origin}/?kids=8`, { width: 390, height: 844, mobile: true });

@@ -251,6 +251,17 @@ async function openPage(port, url, { width, height, mobile }) {
       await sleep(250);
     },
 
+    // Поворот телефона: та же вкладка, новые размеры окна и ориентация.
+    // Страница получает resize и orientationchange, как на живом телефоне.
+    async resize(w, h, isMobile = mobile) {
+      const landscape = w > h;
+      await send('Emulation.setDeviceMetricsOverride', {
+        width: w, height: h, deviceScaleFactor: 1, mobile: isMobile, screenWidth: w, screenHeight: h,
+        screenOrientation: { type: landscape ? 'landscapePrimary' : 'portraitPrimary', angle: landscape ? 90 : 0 }
+      });
+      await sleep(400);
+    },
+
     async type(text) {
       await send('Input.insertText', { text: String(text) });
       await sleep(60);

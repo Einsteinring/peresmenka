@@ -66,9 +66,24 @@ function noErrors(page) {
 
 /* ── 1. второй ребёнок ───────────────────────────────────────────────────── */
 
+// Изменён сознательно (как сценарий шторки): кнопки «Указать возраст» больше
+// нет — ползунок первого ребёнка стоит на месте с самого начала. Пока его не
+// тронули, фильтра по возрасту нет; первое касание создаёт ребёнка с
+// возрастом под пальцем. Дальше — как было: поле с числом, «Добавить ещё
+// ребёнка», оба возраста в адресе и блок «обоих сразу».
 test('добавить второго ребёнка: оба возраста в адресе и блок «обоих сразу»', async () => {
   const page = await open('/');
-  await page.click(button('^(указать возраст|добавить)'), 'кнопка «Указать возраст»');
+  const before = await count(page);
+  const slider = labelled('^Возраст ребёнка 1, ползунок$');
+  await page.waitFor(`!!(${slider})`, { what: 'ползунок первого ребёнка до всякого ввода' });
+  assert.equal((await page.params()).kids, undefined, 'пока ползунок не тронут, возраста в адресе быть не должно');
+  assert.equal(await count(page), before);
+
+  await page.click(slider, 'касание ползунка');
+  await page.waitFor(`/^\\d+$/.test(new URLSearchParams(location.search).get('kids') || '')`, { what: 'первый ребёнок после касания' });
+  const touched = (await page.params()).kids;
+  assert.equal(await page.eval(`__ui.label('^Возраст ребёнка 1$').value`), touched, 'поле с числом не совпало с ползунком');
+
   await page.fill(labelled('^Возраст ребёнка 1$'), 7);
   await page.waitFor(`new URLSearchParams(location.search).get('kids') === '7'`, { what: 'kids=7 в адресе' });
 
@@ -459,4 +474,91 @@ test('карточки одного ряда: цена и «Подробнее»
   assert.ok(spread.worst < 1, `нижняя строка разъехалась в ряду на ${spread.worst} px`);
   noErrors(page);
   await page.close();
+});
+
+/* ── 11. телефон в горизонтали и поворот ─────────────────────────────────── */
+
+// Нашлось на живом телефоне: в горизонтали (по ширине это планшет, по
+// высоте — 360–430 px) полоса «Фильтры» вставала на первый экран и пряталась,
+// когда до кнопки героя докручивали, — наоборот. Правило: полоса видна,
+// только когда кнопку героя прокрутили мимо, за верхний край. Проверяется
+// и рывком — одной прокруткой из-под нижнего края сразу за верхний.
+// 568×320 (самый низкий телефон) — нарочно: там кнопка героя и сейчас ниже
+// первого экрана, ровно то условие, при котором полоса вставала наверх.
+const heroGo = `__ui.text('a, button', '^подобрать кружок')`;
+const filtersBar = `!!__ui.text('button', '^фильтры')`;
+const heroPassed = `(${heroGo}).getBoundingClientRect().bottom <= 0`;
+
+async function barMatchesHero(page, what) {
+  // Полоса видна ровно тогда, когда кнопка героя выше верхнего края.
+  await page.waitFor(`(${filtersBar}) === (${heroPassed})`, { what });
+}
+
+test('полоса «Фильтры» в горизонтали телефона и при повороте', async () => {
+  for (const [w, h, heroOnFirstScreen] of [[844, 390, true], [932, 430, true], [740, 360, true], [568, 320, false]]) {
+    const page = await open('/', { width: w, height: h, mobile: true });
+    await page.waitFor(`!!(${heroGo})`, { what: 'кнопка героя' });
+    assert.equal(await page.eval(filtersBar), false, `${w}×${h}: полоса на первом экране`);
+    const heroTop = await page.eval(`(${heroGo}).getBoundingClientRect().top`);
+    if (heroOnFirstScreen) assert.ok(heroTop < h, `${w}×${h}: кнопка героя не попадает на первый экран`);
+    else assert.ok(heroTop >= h, `${w}×${h}: кнопка героя должна быть ниже первого экрана — иначе случай не проверяется`);
+
+    await page.wheel(900);
+    await page.waitFor(`(${heroPassed}) && (${filtersBar})`, { what: `${w}×${h}: полоса после прокрутки мимо кнопки` });
+    await page.eval('window.scrollTo(0, 0)');
+    await page.waitFor(`!(${filtersBar})`, { what: `${w}×${h}: полоса спряталась наверху` });
+    noErrors(page);
+    await page.close();
+  }
+
+  // Поворот в одной вкладке: вертикаль → горизонталь → вертикаль, и сверху,
+  // и прокрученной страницей. Полоса всё время следует за кнопкой героя.
+  const page = await open('/', { width: 390, height: 844, mobile: true });
+  const turns = [[390, 844], [844, 390], [390, 844]];
+  for (const [w, h] of turns) {
+    await page.resize(w, h);
+    await page.eval('window.scrollTo(0, 0)');
+    await barMatchesHero(page, `${w}×${h} наверху`);
+    assert.equal(await page.eval(filtersBar), false, `${w}×${h}: полоса наверху страницы`);
+  }
+  await page.wheel(1200);
+  await page.waitFor(filtersBar, { what: 'полоса после прокрутки в вертикали' });
+  for (const [w, h] of [[844, 390], [390, 844], [844, 390]]) {
+    await page.resize(w, h);
+    await barMatchesHero(page, `${w}×${h} после поворота прокрученной страницы`);
+  }
+  noErrors(page);
+  await page.close();
+});
+
+/* ── 12. возраст не задан: клавиатура и поле с числом ────────────────────── */
+
+// Нашлось на живом телефоне: нарисованную шкалу пытались тянуть. Теперь
+// ползунок рабочий с самого начала — и с клавиатуры тоже: фокус на нём и
+// стрелка создают первого ребёнка, фокус остаётся на ползунке, следующая
+// стрелка меняет уже его возраст. Поле с числом рядом работает сразу.
+test('возраст не задан: стрелка на ползунке и поле с числом создают ребёнка', async () => {
+  const page = await open('/');
+  const before = await count(page);
+  const slider = labelled('^Возраст ребёнка 1, ползунок$');
+  await page.waitFor(`!!(${slider})`, { what: 'ползунок первого ребёнка' });
+  const rest = Number(await page.eval(`(${slider}).value`));
+  await page.eval(`(${slider}).focus()`);
+
+  await page.key('ArrowRight');
+  await page.waitFor(`new URLSearchParams(location.search).get('kids') === '${rest + 1}'`, { what: `kids=${rest + 1} после стрелки` });
+  assert.equal(await page.eval(`document.activeElement.getAttribute('aria-label')`), 'Возраст ребёнка 1, ползунок',
+    'после создания ребёнка фокус должен остаться на ползунке');
+  await page.key('ArrowRight');
+  await page.waitFor(`new URLSearchParams(location.search).get('kids') === '${rest + 2}'`, { what: `kids=${rest + 2} после второй стрелки` });
+  assert.notEqual(await count(page), before, 'фильтр по возрасту должен включиться');
+  noErrors(page);
+  await page.close();
+
+  const typed = await open('/');
+  await typed.fill(labelled('^Возраст ребёнка 1$'), 12);
+  await typed.waitFor(`new URLSearchParams(location.search).get('kids') === '12'`, { what: 'kids=12 из поля с числом' });
+  assert.equal(await typed.eval(`(${slider}).value`), '12', 'ползунок не встал на возраст из поля');
+  noErrors(typed);
+  await typed.close();
 });

@@ -279,7 +279,8 @@ async function openPage(port, url, { width, height, mobile }) {
 
     // Снимок полосы страницы от y до y + height в координатах документа.
     // Нужен сборке design/compare.html, сценарии им не пользуются.
-    async shot(y, height, width) {
+    // scale 2 — снимок с двойной плотностью (превью для портфолио).
+    async shot(y, height, width, scale = 1) {
       await page.eval('document.fonts.ready.then(() => true)');
       // Режим «за пределами экрана» временно растягивает вьюпорт на весь
       // документ, и вёрстка, зависящая от высоты окна, снимается не такой,
@@ -288,7 +289,7 @@ async function openPage(port, url, { width, height, mobile }) {
       const top = inView ? y - (await page.eval('scrollY')) : y;
       const r = await send('Page.captureScreenshot', {
         format: 'png', captureBeyondViewport: !inView,
-        clip: { x: 0, y: inView ? top : y, width, height, scale: 1 }
+        clip: { x: 0, y: inView ? top : y, width, height, scale }
       });
       return Buffer.from(r.data, 'base64');
     },
